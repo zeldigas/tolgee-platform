@@ -1,3 +1,7 @@
+This is fork of tolgee-platform with removed enterprise features. Pushed to `zeldigas/tolgee` on dockerhub (latest tag)
+
+---
+
 <h1 align="center" style="border-bottom: none">
     <b>
         <a href="https://tolgee.io">Tolgee</a><br>

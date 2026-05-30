@@ -1,8 +1,6 @@
 name: Report intermittent tests
 
 on:
-  schedule:
-    - cron: "42 04 * * *"
   workflow_dispatch:
 
 jobs:

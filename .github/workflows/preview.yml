@@ -1,12 +1,7 @@
 name: Deploy preview
 
 on:
-  push:
-    tags:
-      - preview/stepan/1
-      - preview/stepan/2
-      - preview/honza/1
-      - preview/honza/2
+  workflow_dispatch:
 
 jobs:
   deploy:
