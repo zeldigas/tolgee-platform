@@ -14,95 +14,17 @@ declare namespace DataCy {
         "account-security-provider-connect" |
         "account-security-provider-disconnect" |
         "account-security-set-password-instructions-sent" |
-        "active-plan-license-key-input" |
         "activity-compact" |
         "activity-compact-detail-button" |
         "activity-detail" |
         "activity-detail-dialog" |
-        "admin-carry-over-item" |
-        "admin-carry-over-settled-by" |
-        "admin-carry-over-total" |
-        "admin-carry-overs-section" |
-        "admin-carry-overs-tab-active" |
-        "admin-carry-overs-tab-history" |
-        "admin-invoices-item" |
-        "admin-invoices-item-number" |
-        "admin-invoices-item-total" |
-        "admin-invoices-org-filter" |
-        "admin-invoices-org-section" |
-        "admin-subscriptions-cloud-cancel-plan-button" |
-        "admin-subscriptions-self-hosted-cancel-plan-button" |
         "administration-access-message" |
-        "administration-assign-plan-button" |
-        "administration-assign-plan-dialog-not-trial-not-free-alert" |
-        "administration-assign-plan-dialog-organization-paying-alert" |
-        "administration-assign-plan-dialog-trial-switch" |
-        "administration-billing-creating-for-organization-alert" |
-        "administration-billing-edit-custom-plan-button" |
-        "administration-billing-exclusive-plan-chip" |
-        "administration-billing-trial-badge" |
-        "administration-billing-unassign-custom-plan-button" |
-        "administration-cloud-plan-field-free" |
-        "administration-cloud-plan-field-included-keys" |
-        "administration-cloud-plan-field-included-mt-credits" |
-        "administration-cloud-plan-field-included-seats" |
-        "administration-cloud-plan-field-included-translations" |
-        "administration-cloud-plan-field-metric-type" |
-        "administration-cloud-plan-field-metric-type-item" |
-        "administration-cloud-plan-field-price-per-thousand-keys" |
-        "administration-cloud-plan-field-price-per-thousand-mt-credits" |
-        "administration-cloud-plan-field-price-per-thousand-translations" |
-        "administration-cloud-plan-field-select-existing-stripe-product" |
-        "administration-cloud-plan-field-type" |
-        "administration-cloud-plan-field-type-item" |
-        "administration-cloud-plans-item" |
-        "administration-cloud-plans-item-archive" |
-        "administration-cloud-plans-item-archived-badge" |
-        "administration-cloud-plans-item-delete" |
-        "administration-cloud-plans-item-edit" |
-        "administration-cloud-plans-item-public-badge" |
-        "administration-create-custom-plan-button" |
-        "administration-customize-plan-switch" |
         "administration-debug-customer-account-message" |
         "administration-debug-customer-exit-button" |
-        "administration-edit-current-plan-button" |
-        "administration-ee-license-key-input" |
-        "administration-ee-license-release-key-button" |
-        "administration-ee-plan-cancel-button" |
-        "administration-ee-plans-item" |
-        "administration-ee-plans-item-archive" |
-        "administration-ee-plans-item-delete" |
-        "administration-ee-plans-item-edit" |
-        "administration-ee-plans-item-public-badge" |
-        "administration-ee-translation-agencies-field-description" |
-        "administration-ee-translation-agencies-field-email" |
-        "administration-ee-translation-agencies-field-email-bcc" |
-        "administration-ee-translation-agencies-field-name" |
-        "administration-ee-translation-agencies-field-services" |
-        "administration-ee-translation-agencies-field-url" |
         "administration-frame" |
         "administration-organizations-list-item" |
         "administration-organizations-projects-button" |
         "administration-organizations-settings-button" |
-        "administration-plan-field-archived" |
-        "administration-plan-field-feature" |
-        "administration-plan-field-name" |
-        "administration-plan-field-non-commercial" |
-        "administration-plan-field-price-monthly" |
-        "administration-plan-field-price-per-seat" |
-        "administration-plan-field-price-yearly" |
-        "administration-plan-field-public" |
-        "administration-plan-field-stripe-product" |
-        "administration-plan-field-stripe-product-name" |
-        "administration-plan-selector" |
-        "administration-subscriptions-active-self-hosted-ee-plan" |
-        "administration-subscriptions-assign-plan-save-button" |
-        "administration-subscriptions-cloud-plan-name" |
-        "administration-subscriptions-current-plan-info" |
-        "administration-subscriptions-custom-plans-item" |
-        "administration-subscriptions-plan-popover" |
-        "administration-subscriptions-trialing-filter" |
-        "administration-trial-end-date-field" |
         "administration-user-debug-account" |
         "administration-user-delete-user" |
         "administration-user-disable-user" |
@@ -110,61 +32,11 @@ declare namespace DataCy {
         "administration-user-menu" |
         "administration-user-role-select" |
         "administration-users-list-item" |
-        "agency-label" |
         "agency-select" |
         "agency-select-item" |
-        "ai-customization-project-description" |
-        "ai-customization-project-description-add" |
-        "ai-customization-project-description-edit" |
-        "ai-languages-description" |
-        "ai-languages-description-edit" |
         "ai-menu-context-data" |
         "ai-menu-prompts" |
-        "ai-playground-admin-access-info" |
         "ai-playground-preview" |
-        "ai-playground-usage-cached-tokens" |
-        "ai-playground-usage-mt-credits" |
-        "ai-playground-usage-tokens" |
-        "ai-prompt-batch-dialog-cancel" |
-        "ai-prompt-batch-dialog-run" |
-        "ai-prompt-dataset-cancel" |
-        "ai-prompt-dataset-got-it" |
-        "ai-prompt-dataset-no-tags-text" |
-        "ai-prompt-dataset-run" |
-        "ai-prompt-item-menu" |
-        "ai-prompt-item-name" |
-        "ai-prompt-name" |
-        "ai-prompt-open-existing-prompt-item" |
-        "ai-prompt-open-existing-prompt-select" |
-        "ai-prompt-playground-close" |
-        "ai-prompt-preview-button" |
-        "ai-prompt-preview-more-button" |
-        "ai-prompt-preview-on-all" |
-        "ai-prompt-preview-on-dataset" |
-        "ai-prompt-provider-item" |
-        "ai-prompt-provider-rename-button" |
-        "ai-prompt-provider-select" |
-        "ai-prompt-rename-cancel" |
-        "ai-prompt-rename-name-field" |
-        "ai-prompt-rename-save" |
-        "ai-prompt-rendered" |
-        "ai-prompt-rendered-expand-button" |
-        "ai-prompt-result-raw" |
-        "ai-prompt-result-translation" |
-        "ai-prompt-save-as-field-name" |
-        "ai-prompt-save-as-field-use-as-default" |
-        "ai-prompt-save-as-new-button" |
-        "ai-prompt-save-button" |
-        "ai-prompt-save-dialog-cancel" |
-        "ai-prompt-save-dialog-save" |
-        "ai-prompt-save-more-button" |
-        "ai-prompt-show-result-toggle" |
-        "ai-prompt-tab-advanced" |
-        "ai-prompt-tab-basic" |
-        "ai-prompts-add-prompt" |
-        "ai-prompts-menu-item-delete" |
-        "ai-prompts-menu-item-rename" |
-        "ai-prompts-open-playground-button" |
         "api-key-expiry-info" |
         "api-key-list-item" |
         "api-key-list-item-delete-button" |
@@ -174,10 +46,6 @@ declare namespace DataCy {
         "api-key-list-item-regenerate-button" |
         "api-keys-create-edit-dialog" |
         "api-keys-project-select-item" |
-        "assigned-projects-select" |
-        "assigned-projects-select-item" |
-        "assignee-search-select-popover" |
-        "assignee-select" |
         "auto-avatar-img" |
         "avatar-image" |
         "avatar-menu-open-button" |
@@ -198,43 +66,7 @@ declare namespace DataCy {
         "batch-operations-submit-button" |
         "batch-progress" |
         "batch-select-item" |
-        "billing-actual-period" |
-        "billing-actual-period-end" |
-        "billing-actual-used-keys" |
-        "billing-actual-used-monthly-credits" |
-        "billing-actual-used-seats" |
-        "billing-actual-used-strings" |
-        "billing-expected-usage" |
-        "billing-expected-usage-open-button" |
-        "billing-invoice-item-number" |
-        "billing-invoice-usage-button" |
-        "billing-invoices-list" |
-        "billing-period-switch" |
-        "billing-plan" |
-        "billing-plan-action-button" |
-        "billing-plan-included-credits" |
-        "billing-plan-included-keys" |
-        "billing-plan-included-seats" |
-        "billing-plan-included-strings" |
-        "billing-plan-monthly-price" |
-        "billing-plan-price-extra-seat" |
-        "billing-plan-price-extra-thousand-keys" |
-        "billing-plan-price-extra-thousand-mt-credits" |
-        "billing-plan-price-extra-thousand-strings" |
-        "billing-plan-subtitle" |
-        "billing-progress-label-item" |
-        "billing-subscriptions-cloud-button" |
-        "billing-subscriptions-self-hosted-ee-button" |
-        "billing-upgrade-preview-confirm-button" |
-        "billing-usage-table" |
-        "billing-usage-table-credits" |
-        "billing-usage-table-keys" |
-        "billing-usage-table-seats" |
-        "billing-usage-table-translations" |
-        "billing_period_annual" |
         "branch-default-chip" |
-        "branch-name-input" |
-        "branch-protected-icon" |
         "branch-select-item" |
         "branch-selector" |
         "cell-key-screenshot-dropzone" |
@@ -267,30 +99,6 @@ declare namespace DataCy {
         "content-delivery-storage-selector-item" |
         "content-delivery-subtitle" |
         "content-delivery-zip-export-checkbox" |
-        "create-edit-glossary-cancel" |
-        "create-edit-glossary-dialog" |
-        "create-edit-glossary-submit" |
-        "create-edit-translation-memory-cancel" |
-        "create-edit-translation-memory-submit" |
-        "create-glossary-field-name" |
-        "create-glossary-term-cancel" |
-        "create-glossary-term-dialog" |
-        "create-glossary-term-field-description" |
-        "create-glossary-term-field-text" |
-        "create-glossary-term-flag-abbreviation" |
-        "create-glossary-term-flag-case-sensitive" |
-        "create-glossary-term-flag-forbidden" |
-        "create-glossary-term-flag-non-translatable" |
-        "create-glossary-term-submit" |
-        "create-task-field-description" |
-        "create-task-field-languages" |
-        "create-task-field-languages-item" |
-        "create-task-field-name" |
-        "create-task-field-type" |
-        "create-task-field-type-item" |
-        "create-task-submit" |
-        "create-translation-memory-dialog" |
-        "create-translation-memory-field-name" |
         "dashboard-projects-list-item" |
         "default-namespace-select" |
         "delete-user-button" |
@@ -303,9 +111,7 @@ declare namespace DataCy {
         "edit-pat-dialog-content" |
         "edit-pat-dialog-description-input" |
         "edit-pat-dialog-title" |
-        "empty-scope-dialog" |
         "error-message" |
-        "expected-usage-dialog" |
         "expiration-date-field" |
         "expiration-date-picker" |
         "expiration-select" |
@@ -327,7 +133,6 @@ declare namespace DataCy {
         "file-dropzone-select-button" |
         "filter-item" |
         "filter-item-exclude" |
-        "form-submit-button" |
         "former-user-name" |
         "generate-api-key-dialog-description-input" |
         "generate-pat-dialog-content" |
@@ -353,47 +158,7 @@ declare namespace DataCy {
         "global-plus-button" |
         "global-search-field" |
         "global-user-menu-button" |
-        "glossaries-empty-add-button" |
-        "glossaries-list-more-button" |
-        "glossary-batch-delete-button" |
-        "glossary-batch-toolbar" |
-        "glossary-delete-button" |
-        "glossary-edit-button" |
-        "glossary-empty-add-term-button" |
-        "glossary-empty-import-terms-button" |
-        "glossary-export-button" |
-        "glossary-import-button" |
-        "glossary-import-cancel-button" |
-        "glossary-import-dialog" |
-        "glossary-import-mode-add" |
-        "glossary-import-mode-replace" |
-        "glossary-import-submit-button" |
-        "glossary-list-item" |
-        "glossary-list-languages" |
-        "glossary-panel-container" |
-        "glossary-panel-container-empty" |
-        "glossary-panel-searched-list" |
-        "glossary-projects-info" |
-        "glossary-switch" |
         "glossary-term-highlight" |
-        "glossary-term-list-item" |
-        "glossary-term-preview-cancel-button" |
-        "glossary-term-preview-close-button" |
-        "glossary-term-preview-container" |
-        "glossary-term-preview-description" |
-        "glossary-term-preview-description-card" |
-        "glossary-term-preview-edit-button" |
-        "glossary-term-preview-edit-input" |
-        "glossary-term-preview-empty-description" |
-        "glossary-term-preview-save-button" |
-        "glossary-term-preview-source-text" |
-        "glossary-term-preview-target-text" |
-        "glossary-translation-cancel-button" |
-        "glossary-translation-cell" |
-        "glossary-translation-edit-field" |
-        "glossary-translation-save-button" |
-        "glossary-view-button" |
-        "glossary-view-language-select" |
         "handlebars-editor" |
         "import-conflict-resolution-dialog" |
         "import-conflicts-not-resolved-dialog" |
@@ -458,7 +223,6 @@ declare namespace DataCy {
         "invitation-dialog-type-link-button" |
         "invitation_email_mismatch_message" |
         "invite-generate-button" |
-        "invoice-details-dialog" |
         "key-char-limit-checkbox" |
         "key-char-limit-input" |
         "key-edit-tab-advanced" |
@@ -468,14 +232,10 @@ declare namespace DataCy {
         "key-plural-checkbox" |
         "key-plural-variable-name" |
         "label-autocomplete-option" |
-        "label-modal" |
         "label-selector-autocomplete" |
-        "language-ai-prompt-dialog-description-input" |
-        "language-ai-prompt-dialog-save" |
         "language-delete-button" |
         "language-icon-list-item" |
         "language-modify-form" |
-        "language-select-popover" |
         "languages-add-dialog-submit" |
         "languages-create-autocomplete-field" |
         "languages-create-autocomplete-suggested-option" |
@@ -488,56 +248,11 @@ declare namespace DataCy {
         "languages-modify-cancel-button" |
         "languages-prepared-language-box" |
         "llm-machine-translation-customize" |
-        "llm-provider-create-dialog-submit" |
-        "llm-provider-create-dialog-update" |
-        "llm-provider-form-priority-select" |
-        "llm-provider-form-priority-select-item" |
-        "llm-provider-form-select" |
-        "llm-provider-form-text-field" |
-        "llm-provider-form-type-select" |
-        "llm-provider-form-type-select-item" |
-        "llm-provider-item-menu" |
-        "llm-provider-item-name" |
-        "llm-provider-item-type" |
-        "llm-provider-menu-item-delete" |
-        "llm-provider-menu-item-edit" |
-        "llm-provider-pricing-capacity-context-and-screenshots" |
-        "llm-provider-pricing-capacity-context-no-screenshots" |
-        "llm-provider-pricing-capacity-no-context" |
-        "llm-provider-pricing-dialog" |
-        "llm-provider-pricing-estimate-context-and-screenshots" |
-        "llm-provider-pricing-estimate-context-no-screenshots" |
-        "llm-provider-pricing-estimate-no-context" |
-        "llm-provider-pricing-estimate-table" |
-        "llm-provider-pricing-info" |
-        "llm-provider-pricing-input-row" |
-        "llm-provider-pricing-monthly-capacity-table" |
-        "llm-provider-pricing-output-row" |
-        "llm-provider-pricing-token-table" |
-        "llm-providers-custom" |
-        "llm-providers-server" |
         "login-button" |
         "login-provider" |
         "machine-translations-settings-language-enabled-service" |
         "machine-translations-settings-language-options" |
         "machine-translations-settings-language-primary-service" |
-        "merge-changes-tabs" |
-        "merge-stat-additions" |
-        "merge-stat-additions-count" |
-        "merge-stat-conflicts" |
-        "merge-stat-conflicts-count" |
-        "merge-stat-deletions" |
-        "merge-stat-deletions-count" |
-        "merge-stat-modifications" |
-        "merge-stat-modifications-count" |
-        "merge-tab-add" |
-        "merge-tab-add-count" |
-        "merge-tab-conflict" |
-        "merge-tab-conflict-count" |
-        "merge-tab-delete" |
-        "merge-tab-delete-count" |
-        "merge-tab-update" |
-        "merge-tab-update-count" |
         "mfa-disable-button" |
         "mfa-disable-dialog" |
         "mfa-disable-dialog-content" |
@@ -586,12 +301,6 @@ declare namespace DataCy {
         "notifications-list-item" |
         "notifications-settings-icon" |
         "notistack-snackbar" |
-        "order-translation-confirmation" |
-        "order-translation-confirmation-ok" |
-        "order-translation-invitation-checkbox" |
-        "order-translation-next" |
-        "order-translation-sharing-details-consent-checkbox" |
-        "order-translation-submit" |
         "organization-address-part-field" |
         "organization-description-field" |
         "organization-invitation-cancel-button" |
@@ -631,20 +340,10 @@ declare namespace DataCy {
         "permissions-menu-inherited-message" |
         "permissions-menu-reset-to-organization" |
         "permissions-menu-save" |
-        "plan-limit-dialog-close" |
-        "plan-limit-exceeded-popover" |
         "plan_seat_limit_exceeded_while_accepting_invitation_message" |
-        "project-ai-prompt-dialog-description-input" |
-        "project-ai-prompt-dialog-save" |
         "project-base-language-tm-conflict-confirm" |
         "project-base-language-tm-conflict-dialog" |
         "project-base-language-tm-conflict-list" |
-        "project-branch-merge-accept" |
-        "project-branch-merge-apply" |
-        "project-branch-merge-cancel" |
-        "project-branch-merge-change" |
-        "project-branch-merge-delete-branch-checkbox" |
-        "project-branch-merge-detail" |
         "project-dashboard-activity-chart" |
         "project-dashboard-activity-list" |
         "project-dashboard-base-word-count" |
@@ -699,26 +398,9 @@ declare namespace DataCy {
         "project-name-field" |
         "project-select" |
         "project-settings" |
-        "project-settings-branch-item" |
-        "project-settings-branch-item-name" |
-        "project-settings-branch-item-properties" |
-        "project-settings-branches-actions-menu" |
-        "project-settings-branches-add" |
-        "project-settings-branches-merge-into-button" |
-        "project-settings-branches-protection-button" |
-        "project-settings-branches-remove-button" |
-        "project-settings-branches-rename-button" |
         "project-settings-button" |
         "project-settings-delete-button" |
         "project-settings-description" |
-        "project-settings-label-item" |
-        "project-settings-label-item-description" |
-        "project-settings-label-item-label" |
-        "project-settings-label-item-name" |
-        "project-settings-labels-add-button" |
-        "project-settings-labels-edit-button" |
-        "project-settings-labels-list" |
-        "project-settings-labels-remove-button" |
         "project-settings-languages" |
         "project-settings-languages-add" |
         "project-settings-languages-list-edit-button" |
@@ -729,10 +411,6 @@ declare namespace DataCy {
         "project-settings-menu-qa" |
         "project-settings-name" |
         "project-settings-suggestions-mode-switch" |
-        "project-settings-tm-configure" |
-        "project-settings-tm-row" |
-        "project-settings-tm-shared" |
-        "project-settings-tm-table" |
         "project-settings-transfer-button" |
         "project-settings-translation-protection-switch" |
         "project-settings-use-branching-switch" |
@@ -748,27 +426,6 @@ declare namespace DataCy {
         "project-transfer-autocomplete-suggested-option" |
         "project-transfer-confirmation-field" |
         "project-transfer-dialog" |
-        "prompt-basic-option" |
-        "prompt-basic-option-edit" |
-        "qa-action-correct" |
-        "qa-action-ignore" |
-        "qa-badge" |
-        "qa-badge-unresolved" |
-        "qa-check-item" |
-        "qa-check-item-variant-badge" |
-        "qa-enabled-toggle" |
-        "qa-issue-highlight" |
-        "qa-issue-marker" |
-        "qa-language-dialog-inherited-banner" |
-        "qa-language-dialog-reset-to-global" |
-        "qa-language-dialog-save" |
-        "qa-language-settings-button" |
-        "qa-panel-container" |
-        "qa-panel-container-disabled" |
-        "qa-panel-container-empty" |
-        "qa-panel-container-project-disabled" |
-        "qa-settings-row" |
-        "qa-settings-select" |
         "quick-start-action" |
         "quick-start-dialog" |
         "quick-start-finish-action" |
@@ -787,10 +444,6 @@ declare namespace DataCy {
         "search-select-new" |
         "search-select-search" |
         "seat_spending_limit_exceeded_while_accepting_invitation_message" |
-        "self-hosted-ee-active-plan" |
-        "self-hosted-ee-subscription-metrics" |
-        "self-hosted-plans-placeholder" |
-        "self-hosted-plans-placeholder-contact-us" |
         "sensitive-dialog-otp-input" |
         "sensitive-dialog-password-input" |
         "sensitive-protection-dialog" |
@@ -799,33 +452,8 @@ declare namespace DataCy {
         "signup-error-free-seat-limit" |
         "signup-error-plan-seat-limit" |
         "signup-error-seats-spending-limit" |
-        "spending-limit-dialog-close" |
-        "spending-limit-exceeded-popover" |
         "sso-migration-info-text" |
-        "storage-add-item-button" |
-        "storage-form-azure-connection-string" |
-        "storage-form-azure-container-name" |
-        "storage-form-delete" |
-        "storage-form-name" |
-        "storage-form-public-url-prefix" |
-        "storage-form-s3-access-key" |
-        "storage-form-s3-bucket-name" |
-        "storage-form-s3-endpoint" |
-        "storage-form-s3-path" |
-        "storage-form-s3-secret-key" |
-        "storage-form-s3-signing-region" |
-        "storage-form-save" |
-        "storage-form-test" |
-        "storage-form-type-azure" |
-        "storage-form-type-s3" |
-        "storage-item-edit" |
-        "storage-list-item" |
-        "storage-subtitle" |
         "submenu-item" |
-        "subscribe-cancels-trial-plan-tooltip" |
-        "subscriptions-cloud-popover-active-plan-name" |
-        "subscriptions-trial-alert" |
-        "subscriptions-trial-alert-reaching-the-limit" |
         "suggestion-action" |
         "suggestions-list" |
         "switch-popover-item" |
@@ -833,111 +461,12 @@ declare namespace DataCy {
         "switch-popover-search" |
         "tag-autocomplete-input" |
         "tag-autocomplete-option" |
-        "task-date-picker" |
-        "task-detail" |
-        "task-detail-author" |
-        "task-detail-characters" |
-        "task-detail-close" |
-        "task-detail-closed-at" |
-        "task-detail-created-at" |
-        "task-detail-download-report" |
-        "task-detail-field-description" |
-        "task-detail-field-name" |
-        "task-detail-keys" |
-        "task-detail-project" |
-        "task-detail-submit" |
-        "task-detail-user-characters" |
-        "task-detail-user-keys" |
-        "task-detail-user-words" |
-        "task-detail-words" |
-        "task-info-message" |
-        "task-item" |
-        "task-item-detail" |
-        "task-item-menu" |
-        "task-label-name" |
-        "task-menu-item-cancel-task" |
-        "task-menu-item-mark-as-done" |
-        "task-menu-item-reopen" |
-        "task-number" |
-        "task-preview" |
-        "task-preview-alert" |
-        "task-preview-characters" |
-        "task-preview-keys" |
-        "task-preview-language" |
-        "task-preview-words" |
-        "task-select" |
-        "task-select-item" |
-        "task-select-search" |
         "task-state" |
-        "task-tooltip-action-detail" |
-        "task-tooltip-action-translations" |
-        "task-tooltip-content" |
-        "tasks-filter-menu" |
-        "tasks-header-add-task" |
-        "tasks-header-filter-select" |
-        "tasks-header-order-translation" |
-        "tasks-header-show-all" |
-        "tasks-view-board-button" |
-        "tasks-view-list-button" |
         "this-is-the-element" |
-        "tm-add-project-autocomplete" |
-        "tm-add-project-option" |
-        "tm-batch-delete-button" |
-        "tm-batch-toolbar" |
-        "tm-content-subtitle" |
-        "tm-create-entry-dialog" |
-        "tm-empty-wizard" |
-        "tm-empty-wizard-copy" |
-        "tm-empty-wizard-import" |
-        "tm-empty-wizard-manual" |
-        "tm-entries-header" |
-        "tm-entries-header-base-badge" |
-        "tm-entries-language-filter" |
-        "tm-entries-language-select-item" |
-        "tm-entries-layout-flat" |
-        "tm-entries-layout-stacked" |
-        "tm-entries-select-all" |
-        "tm-entries-table" |
-        "tm-entries-total-count" |
-        "tm-entry-cancel" |
-        "tm-entry-create-submit" |
-        "tm-entry-edit-affordance" |
-        "tm-entry-edit-field" |
-        "tm-entry-language-multiselect" |
-        "tm-entry-language-multiselect-item" |
-        "tm-entry-row-checkbox" |
-        "tm-entry-row-keys" |
-        "tm-entry-save" |
-        "tm-entry-source-text" |
-        "tm-entry-target-text" |
-        "tm-entry-translation-cell" |
-        "tm-export-button" |
-        "tm-import-cancel" |
-        "tm-import-dialog" |
-        "tm-import-large-file-notice" |
-        "tm-import-menu-button" |
-        "tm-import-mode-keep" |
-        "tm-import-mode-override" |
-        "tm-import-oversize-warning" |
-        "tm-import-submit" |
-        "tm-no-write-access-notice" |
-        "tm-settings-default-penalty" |
-        "tm-settings-dialog" |
-        "tm-settings-write-only-reviewed" |
-        "tm-write-only-reviewed-dialog" |
-        "tm-write-only-reviewed-save" |
-        "tm-write-only-reviewed-toggle" |
         "top-banner" |
         "top-banner-content" |
         "top-banner-dismiss-button" |
-        "topbap-trial-popover-content" |
-        "topbar-trial-announcement" |
-        "topbar-trial-chip" |
-        "topbar-trial-popover-compare-plans-button" |
-        "topbar-trial-popover-plan-features" |
-        "topbar-trial-popover-trial-plan-chip" |
         "transfer-project-apply-button" |
-        "translation-agency-item" |
         "translation-controls-sort" |
         "translation-controls-sort-item" |
         "translation-create-description-input" |
@@ -954,17 +483,6 @@ declare namespace DataCy {
         "translation-label-add" |
         "translation-label-control" |
         "translation-label-delete" |
-        "translation-memories-empty-add-button" |
-        "translation-memories-list-more-button" |
-        "translation-memory-delete-button" |
-        "translation-memory-edit-button" |
-        "translation-memory-entry-row" |
-        "translation-memory-list-entries-count" |
-        "translation-memory-list-item" |
-        "translation-memory-list-languages" |
-        "translation-memory-list-name" |
-        "translation-memory-settings-button" |
-        "translation-memory-shared-with" |
         "translation-panel" |
         "translation-panel-content" |
         "translation-panel-items-count" |
@@ -1023,9 +541,6 @@ declare namespace DataCy {
         "translations-row-checkbox" |
         "translations-select-all-button" |
         "translations-shortcuts-command" |
-        "translations-state-filter" |
-        "translations-state-filter-clear" |
-        "translations-state-filter-option" |
         "translations-state-indicator" |
         "translations-table-cell" |
         "translations-table-cell-language" |
@@ -1035,7 +550,6 @@ declare namespace DataCy {
         "translations-tag-close" |
         "translations-tag-input" |
         "translations-tags-add" |
-        "translations-task-indicator" |
         "translations-toolbar-counter" |
         "translations-toolbar-to-top" |
         "translations-trash-button" |
@@ -1066,17 +580,5 @@ declare namespace DataCy {
         "user-menu-user-settings" |
         "user-profile" |
         "user-switch-item" |
-        "user-switch-search" |
-        "webhook-auto-disabled-label" |
-        "webhook-form-cancel" |
-        "webhook-form-delete" |
-        "webhook-form-save" |
-        "webhook-form-url" |
-        "webhook-item-toggle" |
-        "webhooks-add-item-button" |
-        "webhooks-item-edit" |
-        "webhooks-item-show-secret" |
-        "webhooks-item-test" |
-        "webhooks-list-item" |
-        "webhooks-subtitle"
+        "user-switch-search"
 }
