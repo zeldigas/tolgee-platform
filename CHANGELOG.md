@@ -1,3 +1,44 @@
+## [3.197.1](https://github.com/tolgee/tolgee-platform/compare/v3.197.0...v3.197.1) (2026-06-03)
+
+
+### Bug Fixes
+
+* stop leaking untranslated glossary terms into AI translations ([#3705](https://github.com/tolgee/tolgee-platform/issues/3705)) ([4fb3a4c](https://github.com/tolgee/tolgee-platform/commit/4fb3a4c428bdb14133596b03f97d74c61e531b10)), closes [#3288](https://github.com/tolgee/tolgee-platform/issues/3288)
+
+# [3.197.0](https://github.com/tolgee/tolgee-platform/compare/v3.196.1...v3.197.0) (2026-06-03)
+
+
+### Bug Fixes
+
+* bump postgres base image 13.21 → 13.23 ([#3717](https://github.com/tolgee/tolgee-platform/issues/3717)) ([7e45c07](https://github.com/tolgee/tolgee-platform/commit/7e45c07214c5cb891596a80b793de59370062d2a))
+
+
+### Features
+
+* hide QA recheck batch operation from non-privileged users ([#3703](https://github.com/tolgee/tolgee-platform/issues/3703)) ([3dcd142](https://github.com/tolgee/tolgee-platform/commit/3dcd1427ec8ffed3b8b55b45b71e852c318a9001))
+* support gettext msgctxt in PO import/export and UI ([#3694](https://github.com/tolgee/tolgee-platform/issues/3694)) ([dfd7775](https://github.com/tolgee/tolgee-platform/commit/dfd77757a650dd6249ff6f1293ca307ce76c75c0)), closes [#3459](https://github.com/tolgee/tolgee-platform/issues/3459) [#3053](https://github.com/tolgee/tolgee-platform/issues/3053)
+
+## [3.196.1](https://github.com/tolgee/tolgee-platform/compare/v3.196.0...v3.196.1) (2026-06-02)
+
+
+### Bug Fixes
+
+* ConcurrentModificationException when changing multiple tags via complex-update endpoint ([#3710](https://github.com/tolgee/tolgee-platform/issues/3710)) ([28e06eb](https://github.com/tolgee/tolgee-platform/commit/28e06ebf58d9e82749d9054c4a8e69b62eaf166e))
+
+# [3.196.0](https://github.com/tolgee/tolgee-platform/compare/v3.195.0...v3.196.0) (2026-06-02)
+
+
+### Features
+
+* single correctable QA issue for ICU placeholders with wrong name ([#3708](https://github.com/tolgee/tolgee-platform/issues/3708)) ([34b6160](https://github.com/tolgee/tolgee-platform/commit/34b6160dc2425765b6682b451cb0441735ea10c7))
+
+# [3.195.0](https://github.com/tolgee/tolgee-platform/compare/v3.194.0...v3.195.0) (2026-06-01)
+
+
+### Features
+
+* show distinct QA badge tooltip when checks are stale ([#3707](https://github.com/tolgee/tolgee-platform/issues/3707)) ([957db74](https://github.com/tolgee/tolgee-platform/commit/957db7407ccf579c9e1c65c8fac4e5fb9f0b8086))
+
 # [3.194.0](https://github.com/tolgee/tolgee-platform/compare/v3.193.1...v3.194.0) (2026-05-29)
 
 
