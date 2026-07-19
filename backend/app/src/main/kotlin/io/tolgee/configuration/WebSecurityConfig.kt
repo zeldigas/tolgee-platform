@@ -101,7 +101,7 @@ class WebSecurityConfig(
         )
         it.requestMatchers(*PUBLIC_ENDPOINTS).permitAll()
         it.requestMatchers(*ADMIN_ENDPOINTS).hasRole("SUPPORTER")
-        it.requestMatchers("/api/**", "/v2/**", "/mcp/**").authenticated()
+        it.requestMatchers("/api/**", "/v2/**").authenticated()
         it.anyRequest().permitAll()
       }.headers { headers ->
         headers.xssProtection(Customizer.withDefaults())
@@ -138,6 +138,9 @@ class WebSecurityConfig(
     registry
       .addInterceptor(organizationAuthorizationInterceptor)
       .addPathPatterns(*ORGANIZATION_ENDPOINTS)
+    // These authorization interceptors are NOT registered for /v2/public/**; routes there must stay free
+    // of {projectId}/{organizationId} path vars + @RequiresProjectPermissions — adding one would silently
+    // bypass authorization.
     registry
       .addInterceptor(projectAuthorizationInterceptor)
       .addPathPatterns(*PROJECT_ENDPOINTS)

@@ -114,9 +114,11 @@ const StyledTileEdit = styled(Box)`
   color: ${({ theme }) => theme.palette.text.secondary};
 `;
 
-export const ProjectTotals: React.FC<{
-  stats: components['schemas']['ProjectStatsModel'];
-}> = ({ stats }) => {
+export const ProjectTotals: React.FC<
+  React.PropsWithChildren<{
+    stats: components['schemas']['ProjectStatsModel'];
+  }>
+> = ({ stats }) => {
   const { t } = useTranslate();
   const project = useProject();
   const history = useHistory();
@@ -299,12 +301,16 @@ export const ProjectTotals: React.FC<{
         >
           <StyledTileDataItem data-cy="project-dashboard-members-count">
             <StyledTileValue>
-              {Number(stats.membersCount).toLocaleString(locale)}
+              {canViewMembers
+                ? Number(stats.membersCount).toLocaleString(locale)
+                : '—'}
             </StyledTileValue>
             <StyledTileDescription>
-              {t('project_dashboard_member_count_plural', {
-                value: Number(stats.membersCount),
-              })}
+              {canViewMembers
+                ? t('project_dashboard_member_count_plural', {
+                    value: Number(stats.membersCount),
+                  })
+                : t('project_menu_members')}
             </StyledTileDescription>
           </StyledTileDataItem>
           {membersEditable && (

@@ -30,8 +30,10 @@ export const TaskReference = NotIncludedInOss('TaskReference');
 export const BranchReference = NotIncludedInOss('BranchReference');
 export const PermissionsAdvancedEe = NotIncludedInOss('PermissionsAdvancedEe');
 export const GlobalLimitPopover = Empty;
-export const billingMenuItems = [] as React.FC<BillingMenuItemsProps>[];
-export const apps = [] as React.FC[];
+export const billingMenuItems = [] as React.FC<
+  React.PropsWithChildren<BillingMenuItemsProps>
+>[];
+export const apps = [] as React.FC<React.PropsWithChildren<unknown>>[];
 export const AgencyLabel = NotIncludedInOss('AgencyLabel');
 export const OrderTranslationsDialog = Empty;
 export const TaskItem = Empty;
@@ -39,6 +41,7 @@ export const TaskFilterPopover = Empty;
 export const TaskAllDonePlaceholder = Empty;
 export const QaBadge = (_props: QaBadgeProps) => Empty() as JSX.Element;
 export const useQaChecksEnabled = (): boolean => false;
+export const useQaDisabledLanguageIds = (): Set<number> => new Set();
 export const QaLanguageStats = (_props: QaLanguageStatsProps) =>
   Empty() as JSX.Element;
 export const QaCheckItem = Empty;

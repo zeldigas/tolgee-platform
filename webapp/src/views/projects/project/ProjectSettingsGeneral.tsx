@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useProjectLanguages } from 'tg.hooks/useProjectLanguages';
 import { ProjectProfileAvatar } from './ProjectProfileAvatar';
-import { BaseLanguageSelect } from './components/BaseLanguageSelect';
+import { BaseLanguageSelect } from 'tg.views/projects/project/components/BaseLanguageSelect';
 import { T, useTranslate } from '@tolgee/react';
 import { StandardForm } from 'tg.component/common/form/StandardForm';
 import { useApiMutation } from 'tg.service/http/useQueryApi';
@@ -100,6 +100,7 @@ export const ProjectSettingsGeneral = () => {
           useNamespaces: project.useNamespaces,
           useBranching: project.useBranching,
           ...values,
+          name: values.name.trim(),
           description: values.description || undefined,
           unassignConflictingTms,
         },

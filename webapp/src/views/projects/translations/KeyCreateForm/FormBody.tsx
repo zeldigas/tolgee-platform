@@ -29,6 +29,7 @@ import { PluralFormCheckbox } from 'tg.component/common/form/PluralFormCheckbox'
 import { CharLimitCheckbox } from 'tg.component/common/form/CharLimitCheckbox';
 import { ControlsEditorSmall } from '../cell/ControlsEditorSmall';
 import { getVisibleCharCount } from '../cell/getVisibleCharCount';
+import { KeyNameWhitespaceWarning } from '../KeyNameWhitespaceWarning';
 
 const StyledContainer = styled('div')`
   display: grid;
@@ -73,7 +74,10 @@ type Props = {
   autofocus?: boolean;
 };
 
-export const FormBody: React.FC<Props> = ({ onCancel, autofocus }) => {
+export const FormBody: React.FC<React.PropsWithChildren<Props>> = ({
+  onCancel,
+  autofocus,
+}) => {
   const { t } = useTranslate();
   const form = useFormikContext<ValuesCreateType>();
   const project = useProject();
@@ -140,7 +144,16 @@ export const FormBody: React.FC<Props> = ({ onCancel, autofocus }) => {
                       />
                     </StyledEdtorWrapper>
                   </EditorWrapper>
-                  <FieldError error={meta.touched && meta.error} />
+                  {meta.touched && meta.error ? (
+                    <FieldError error={meta.error} />
+                  ) : (
+                    <KeyNameWhitespaceWarning
+                      value={field.value}
+                      onTrim={() =>
+                        form.setFieldValue(field.name, field.value.trim())
+                      }
+                    />
+                  )}
                 </div>
               );
             }}

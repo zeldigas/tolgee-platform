@@ -39,6 +39,14 @@ Yup.setLocale({
       />
     ),
   },
+  number: {
+    min: ({ min }) => (
+      <T
+        keyName="validation_schema_number_min_message"
+        params={{ min: min.toString() }}
+      />
+    ),
+  },
 });
 
 const isValidBranchName = (name: string | undefined): boolean => {
@@ -232,7 +240,7 @@ export class Validation {
 
   static readonly PROJECT_CREATION = (t: (string) => string) =>
     Yup.object().shape({
-      name: Yup.string().required().min(3).max(50),
+      name: Yup.string().trim().required().min(3).max(50),
       languages: Yup.array()
         .required()
         .min(1, t('project_creation_add_at_least_one_language'))
@@ -249,7 +257,7 @@ export class Validation {
     });
 
   static readonly PROJECT_SETTINGS = Yup.object().shape({
-    name: Yup.string().required().min(3).max(100),
+    name: Yup.string().trim().required().min(3).max(100),
     description: Yup.string().nullable().min(3).max(2000),
   });
 
@@ -608,6 +616,13 @@ export class Validation {
     });
 
   static readonly BRANCH_MERGE = (t: TranslateFunction) => Yup.object({});
+
+  static readonly PLAN_MIGRATION_FORM = () =>
+    Yup.object().shape({
+      monthlyOffsetDays: Yup.number().required().min(0),
+      yearlyOffsetDays: Yup.number().required().min(0),
+      customEmailBody: Yup.string().nullable(),
+    });
 }
 
 let GLOBAL_VALIDATION_DEBOUNCE_TIMER: any = undefined;

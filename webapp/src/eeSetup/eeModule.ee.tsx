@@ -57,6 +57,7 @@ import {
 } from '../ee/qa/components/QaChecksPanel';
 export { QaBadge } from '../ee/qa/components/QaBadge';
 export { useQaChecksEnabled } from '../ee/qa/hooks/useQaChecksEnabled';
+export { useQaDisabledLanguageIds } from '../ee/qa/hooks/useQaDisabledLanguageIds';
 export { QaLanguageStats } from '../ee/qa/components/QaLanguageStats';
 export { QaCheckItem } from '../ee/qa/components/QaCheckItem';
 export { QaIssueHighlight } from '../ee/qa/components/QaIssueHighlight';
@@ -102,9 +103,10 @@ export { CriticalUsageCircle } from '../ee/billing/component/CriticalUsageCircle
 export { TrialAnnouncement } from '../ee/billing/component/topBar/TrialAnnouncement';
 export { TrialChip } from '../ee/billing/component/topBar/TrialChip';
 
-export const billingMenuItems =
-  billingModule.billingMenuItems as React.FC<BillingMenuItemsProps>[];
-export const apps = [SlackApp] as React.FC[];
+export const billingMenuItems = billingModule.billingMenuItems as React.FC<
+  React.PropsWithChildren<BillingMenuItemsProps>
+>[];
+export const apps = [SlackApp] as React.FC<React.PropsWithChildren<unknown>>[];
 
 export const routes = {
   Root: () => {

@@ -49,7 +49,7 @@ export type BaseViewProps = {
   stretch?: boolean;
 } & Omit<HeaderBarProps, 'noBorder'>;
 
-export const BaseView: FC<BaseViewProps> = (props) => {
+export const BaseView: FC<React.PropsWithChildren<BaseViewProps>> = (props) => {
   const hideChildrenOnLoading =
     props.hideChildrenOnLoading === undefined || props.hideChildrenOnLoading;
 
@@ -91,7 +91,7 @@ export const BaseView: FC<BaseViewProps> = (props) => {
             </Box>
           </SecondaryBar>
         )}
-        <HeaderBar noBorder={Boolean(displayNavigation)} {...props} />
+        <HeaderBar {...props} noBorder={Boolean(displayNavigation)} />
         <StyledPaddingWrapper
           {...props.wrapperProps}
           gridRow={props.stretch ? 4 : undefined}

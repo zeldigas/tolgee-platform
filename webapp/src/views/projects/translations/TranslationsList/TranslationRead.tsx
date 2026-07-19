@@ -8,7 +8,7 @@ import { TranslationLanguage } from './TranslationLanguage';
 import { AiPlaygroundPreview } from '../translationVisual/AiPlaygroundPreview';
 import { TranslationLabels } from 'tg.views/projects/translations/TranslationsList/TranslationLabels';
 import { SuggestionsFirst } from '../Suggestions/SuggestionsFirst';
-import { useQaChecksEnabled } from 'tg.ee';
+import { useQaChecksEnabled, useQaDisabledLanguageIds } from 'tg.ee';
 import { getFirstPluralVariantWithQaIssues } from 'tg.fixtures/qaUtils';
 
 const StyledContainer = styled('div')`
@@ -64,7 +64,7 @@ type Props = {
   readonly?: boolean;
 };
 
-export const TranslationRead: React.FC<Props> = ({
+export const TranslationRead: React.FC<React.PropsWithChildren<Props>> = ({
   width,
   active,
   lastFocusable,
@@ -93,6 +93,9 @@ export const TranslationRead: React.FC<Props> = ({
   } = tools;
 
   const qaChecksEnabled = useQaChecksEnabled();
+  const qaDisabledLanguageIds = useQaDisabledLanguageIds();
+  const languageQaEnabled =
+    qaChecksEnabled && !qaDisabledLanguageIds.has(language.id);
 
   const toggleEdit = () => (isEditing ? handleClose() : handleOpen());
 
@@ -160,7 +163,7 @@ export const TranslationRead: React.FC<Props> = ({
           disabled={disabled}
           showHighlights={isEditingRow && language.base}
           isPlural={keyData.keyIsPlural}
-          qaIssues={qaChecksEnabled ? translation?.qaIssues : undefined}
+          qaIssues={languageQaEnabled ? translation?.qaIssues : undefined}
           translationId={translation?.id}
         />
         {Boolean(translation?.suggestions?.length) && (
@@ -169,6 +172,7 @@ export const TranslationRead: React.FC<Props> = ({
             count={translation?.activeSuggestionCount ?? 0}
             isPlural={keyData.keyIsPlural}
             locale={language.tag}
+            onShowAll={cellClickable ? () => handleOpen() : undefined}
           />
         )}
         {aiPlaygroundData && (

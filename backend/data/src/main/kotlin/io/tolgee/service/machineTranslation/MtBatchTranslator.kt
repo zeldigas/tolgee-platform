@@ -50,6 +50,9 @@ class MtBatchTranslator(
       }
 
     translated.translatedText =
+      translated.translatedText?.withPluralArgName(getPluralArgName(item, baseTranslationText))
+
+    translated.translatedText =
       if (context.project.icuPlaceholders) {
         translated.translatedText
       } else {
@@ -57,6 +60,25 @@ class MtBatchTranslator(
       }
 
     return translated
+  }
+
+  /**
+   * The MT provider (an LLM) returns the plural string with an argument name it picked itself, which
+   * is not guaranteed to match the key's configured one. Force the key's name, the same source of
+   * truth the save path uses.
+   */
+  private fun getPluralArgName(
+    item: MtBatchItemParams,
+    baseTranslationText: String,
+  ): String {
+    context.keys[item.keyId]?.pluralArgName?.let { return it }
+    context.getPluralForms(baseTranslationText)?.argName?.let { return it }
+    return DEFAULT_PLURAL_ARGUMENT_NAME
+  }
+
+  private fun String.withPluralArgName(argName: String): String {
+    val forms = context.getPluralForms(this) ?: return this
+    return forms.forms.toIcuPluralString(optimize = false, argName = argName)
   }
 
   private fun translatePluralSeparately(
@@ -102,7 +124,7 @@ class MtBatchTranslator(
         managerResult,
         withReplacedParams,
         item,
-        context.getPluralForms(baseTranslationText)?.argName ?: DEFAULT_PLURAL_ARGUMENT_NAME,
+        getPluralArgName(item, baseTranslationText),
       )
     }
 
@@ -176,6 +198,9 @@ class MtBatchTranslator(
         item.promptId,
       )
 
+    val providerContext =
+      if (provider.supportsContext) buildContext(item, baseTranslationText) else null
+
     return TranslationParams(
       text = withReplacedParams,
       textRaw = baseTranslationText,
@@ -184,6 +209,7 @@ class MtBatchTranslator(
       targetLanguageTag = targetLanguageTag,
       serviceInfo = context.getServiceInfo(item.targetLanguageId, item.service),
       metadata = metadata,
+      context = providerContext,
       isBatch = context.isBatch,
       pluralForms = pluralForms?.forms,
       pluralFormExamples =
@@ -194,6 +220,19 @@ class MtBatchTranslator(
             it,
           )
         },
+    )
+  }
+
+  private fun buildContext(
+    item: MtBatchItemParams,
+    baseTranslationText: String,
+  ): String? {
+    val keyId = item.keyId ?: return null
+    return MetadataProvider(context).getContext(
+      context.baseLanguage,
+      context.getLanguage(item.targetLanguageId),
+      MetadataKey(keyId, baseTranslationText, item.targetLanguageId),
+      context.keys[keyId]?.description,
     )
   }
 

@@ -28,7 +28,7 @@ type Props = {
   disabled?: boolean;
 };
 
-export const PermissionsSettings: React.FC<Props> = ({
+export const PermissionsSettings: React.FC<React.PropsWithChildren<Props>> = ({
   title,
   permissions,
   onChange,
@@ -72,6 +72,7 @@ export const PermissionsSettings: React.FC<Props> = ({
         translateLanguages: permissions.translateLanguageIds || [],
         stateChangeLanguages: permissions.stateChangeLanguageIds || [],
         suggestLanguages: permissions.suggestLanguageIds || [],
+        suggestManageLanguages: permissions.suggestManageLanguageIds || [],
       });
     }
   }, [dependenciesLoadable.data, rolesLoadable.data, advancedState]);

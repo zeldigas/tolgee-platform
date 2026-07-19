@@ -17,12 +17,17 @@ import {
   usePutTranslation,
 } from 'tg.service/TranslationHooks';
 import { components } from 'tg.service/apiSchema.generated';
+import { MAX_DISPLAYED_SUGGESTIONS } from '../../Suggestions/SuggestionsFirst';
 
 import type { useTranslationsService } from './useTranslationsService';
 import type { useRefsService } from './useRefsService';
 import { AfterCommand, ChangeValue, SetEdit } from '../types';
 import type { useTaskService } from './useTaskService';
-import { composeValue, taskEditControlsShouldBeVisible } from './utils';
+import {
+  composeValue,
+  resolvePluralParameter,
+  taskEditControlsShouldBeVisible,
+} from './utils';
 import type { usePositionService } from './usePositionService';
 import { TranslationViewModel } from '../../ToolsPanel/common/types';
 import { getTranslationPermissions } from '../../cell/editorMainActions/getEditorActions';
@@ -188,10 +193,17 @@ export const useEditService = ({
         keyId: result.keyId,
         lang: lang.tag,
         data(value) {
+          const isNew = !(value.suggestions ?? []).some(
+            (s) => s.id === result.id
+          );
+          const delta = isNew ? 1 : 0;
           return {
-            suggestions: [result],
-            activeSuggestionCount: (value.activeSuggestionCount ?? 0) + 1,
-            totalSuggestionCount: (value.totalSuggestionCount ?? 0) + 1,
+            suggestions: [
+              result,
+              ...(value.suggestions ?? []).filter((s) => s.id !== result.id),
+            ].slice(0, MAX_DISPLAYED_SUGGESTIONS),
+            activeSuggestionCount: (value.activeSuggestionCount ?? 0) + delta,
+            totalSuggestionCount: (value.totalSuggestionCount ?? 0) + delta,
           } satisfies Partial<TranslationViewModel>;
         },
       });
@@ -310,7 +322,10 @@ export const useEditService = ({
     ) {
       const raw = !project.icuPlaceholders;
       const format = getTolgeeFormat(found.translation.text, true, raw);
-      format.parameter = found.keyPluralArgName ?? 'value';
+      format.parameter = resolvePluralParameter(
+        found.keyPluralArgName,
+        format.parameter
+      );
       format.variants[params.pluralVariant] = correctedVariant;
       value = tolgeeFormatGenerateIcu(format, raw);
     } else {
