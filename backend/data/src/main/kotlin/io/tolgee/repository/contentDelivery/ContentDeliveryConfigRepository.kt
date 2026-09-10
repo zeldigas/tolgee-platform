@@ -6,12 +6,13 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
 @Lazy
-interface ContentDeliveryConfigRepository : JpaRepository<ContentDeliveryConfig?, Long?> {
+interface ContentDeliveryConfigRepository : JpaRepository<ContentDeliveryConfig, Long> {
   @Query(
     """
     select count(c) = 0 from ContentDeliveryConfig c
@@ -64,4 +65,8 @@ interface ContentDeliveryConfigRepository : JpaRepository<ContentDeliveryConfig?
     projectId: Long,
     branchId: Long,
   ): List<ContentDeliveryConfig>
+
+  @Modifying
+  @Query("update ContentDeliveryConfig c set c.branch = null where c.project.id = :projectId")
+  fun detachBranchByProjectId(projectId: Long)
 }

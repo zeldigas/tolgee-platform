@@ -105,6 +105,9 @@ interface UserAccountRepository : JpaRepository<UserAccount, Long> {
   @Query("from UserAccount ua where ua.username = :username")
   fun findByExactUsername(username: String?): Optional<UserAccount>
 
+  @Query("from UserAccount ua where ua.username = :username")
+  fun findAllByExactUsername(username: String?): List<UserAccount>
+
   @Query(
     "from UserAccount ua where lower(ua.username) = lower(:username) " +
       "and ua.deletedAt is null and ua.disabledAt is null",
@@ -215,7 +218,7 @@ interface UserAccountRepository : JpaRepository<UserAccount, Long> {
 
   @Query(
     """
-    from UserAccount ua 
+    select ua from UserAccount ua 
       join OrganizationRole orl on orl.user = ua
       join Organization o on orl.organization = o
       where ua.thirdPartyAuthId = :thirdPartyAuthId
@@ -263,7 +266,8 @@ interface UserAccountRepository : JpaRepository<UserAccount, Long> {
         left join Project r on r.id = :projectId
         left join ua.permissions p on p.project.id = :projectId
         left join ua.organizationRoles orl on orl.organization = r.organizationOwner
-        where r.id = :projectId and (p is not null or orl is not null)
+        where r.id = :projectId
+        and (p is not null or orl is not null)
         and (:exceptUserId is null or ua.id <> :exceptUserId)
         and ((lower(ua.name)
         like lower(concat('%', cast(:search as text),'%'))

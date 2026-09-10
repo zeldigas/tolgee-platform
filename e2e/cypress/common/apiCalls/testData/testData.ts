@@ -21,6 +21,12 @@ export const ssoOrganizationsLoginTestData = generateTestDataObject(
 
 export const organizationTestData = generateTestDataObject('organizations');
 
+export const communityContributionData = generateTestDataObject(
+  'community-contribution'
+);
+
+export const membersCommunityData = generateTestDataObject('members-community');
+
 export const organizationNewTestData =
   generateTestDataObject('organization-new');
 
@@ -66,6 +72,8 @@ export const projectTestData = generateTestDataObject('projects');
 export const apiKeysTestData = generateTestDataObject('api-keys');
 
 export const patsTestData = generateTestDataObject('pat');
+
+export const oauth2ConsentTestData = generateTestDataObject('oauth2-consent');
 
 export const languagePermissionsData = generateTestDataObject(
   'language-permissions'

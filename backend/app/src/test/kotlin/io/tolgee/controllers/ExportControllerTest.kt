@@ -17,8 +17,8 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.HttpHeaders
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
@@ -29,7 +29,6 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.function.Consumer
-import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 
 @AutoConfigureMockMvc
@@ -191,12 +190,9 @@ class ExportControllerTest : ProjectAuthControllerTest() {
     val byteArrayInputStream = ByteArrayInputStream(responseContent)
     val zipInputStream = ZipInputStream(byteArrayInputStream)
     val result = HashMap<String, Long>()
-    var nextEntry: ZipEntry?
-    while (zipInputStream.nextEntry.also {
-        nextEntry = it
-      } != null
-    ) {
-      result[nextEntry!!.name] = nextEntry!!.size
+    while (true) {
+      val nextEntry = zipInputStream.nextEntry ?: break
+      result[nextEntry.name] = nextEntry.size
     }
     return result
   }

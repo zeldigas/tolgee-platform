@@ -44,6 +44,7 @@ import io.tolgee.model.contentDelivery.AzureContentStorageConfig
 import io.tolgee.model.contentDelivery.ContentDeliveryConfig
 import io.tolgee.model.contentDelivery.ContentStorage
 import io.tolgee.model.contentDelivery.S3ContentStorageConfig
+import io.tolgee.model.contributor.ProjectContributor
 import io.tolgee.model.dataImport.Import
 import io.tolgee.model.dataImport.ImportFile
 import io.tolgee.model.dataImport.ImportKey
@@ -66,6 +67,7 @@ import io.tolgee.model.keyBigMeta.KeysDistance
 import io.tolgee.model.mtServiceConfig.MtServiceConfig
 import io.tolgee.model.notifications.Notification
 import io.tolgee.model.notifications.NotificationSetting
+import io.tolgee.model.oauth2.OAuth2Grant
 import io.tolgee.model.qa.LanguageQaConfig
 import io.tolgee.model.qa.ProjectQaConfig
 import io.tolgee.model.qa.TranslationQaIssue
@@ -133,6 +135,7 @@ object ProjectExportImportPolicyRegistry {
         ApiKey::class,
         Invitation::class,
         Pat::class,
+        OAuth2Grant::class,
         UserPreferences::class,
         EmailVerification::class,
         SsoTenant::class,
@@ -142,6 +145,7 @@ object ProjectExportImportPolicyRegistry {
         ActivityRevision::class,
         ActivityModifiedEntity::class,
         ActivityDescribingEntity::class,
+        ProjectContributor::class,
         BranchMerge::class,
         BranchMergeChange::class,
         LanguageStats::class,

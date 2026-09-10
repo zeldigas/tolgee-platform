@@ -1,3 +1,5 @@
+FROM eclipse-temurin:25-jre-alpine AS jre
+
 FROM postgres:13.23-alpine3.22
 
 ENTRYPOINT []
@@ -6,7 +8,12 @@ ENTRYPOINT []
 # pinned base image, which lags behind the alpine3.22 branch on security fixes.
 RUN apk --no-cache upgrade
 
-RUN apk --no-cache add openjdk21-jre
+# Alpine 3.22 only packages openjdk21, so bring the JRE 25 from the Temurin image.
+# Both are musl/alpine builds, so the copied runtime is ABI-compatible.
+COPY --from=jre /opt/java/openjdk /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk \
+    PATH="/opt/java/openjdk/bin:${PATH}"
+
 RUN apk --no-cache add libxml2
 
 #############
@@ -27,7 +34,8 @@ ENV HEALTHCHECK_PORT=8080 \
 COPY BOOT-INF/lib /app/lib
 COPY META-INF /app/META-INF
 COPY BOOT-INF/classes /app
-COPY --chmod=755 cmd.sh /app
+COPY cmd.sh /app
+RUN chmod 755 /app/cmd.sh
 
 # Download OpenTelemetry Java agent for distributed tracing
 # When OTEL_JAVAAGENT_ENABLED=true, cmd.sh will use this agent

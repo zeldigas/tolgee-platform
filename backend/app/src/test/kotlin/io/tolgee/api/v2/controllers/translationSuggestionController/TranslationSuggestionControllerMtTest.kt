@@ -381,9 +381,7 @@ class TranslationSuggestionControllerMtTest : ProjectAuthControllerTest("/v2/pro
   @ProjectJWTAuthTestMethod
   fun `it doesn't consume when cached`() {
     saveTestData()
-    val valueWrapperMock = mock<Cache.ValueWrapper>()
-    whenever(cacheMock.get(any())).thenReturn(valueWrapperMock)
-    whenever(valueWrapperMock.get()).thenReturn(
+    whenever(cacheMock.get(any(), eq(TranslateResult::class.java))).thenReturn(
       TranslateResult(
         translatedText = "Yeey! Cached!",
         contextDescription = "context",
@@ -462,6 +460,7 @@ class TranslationSuggestionControllerMtTest : ProjectAuthControllerTest("/v2/pro
     )
   }
 
+  @Suppress("UNCHECKED_CAST")
   private fun verifyServiceFirst(service: String) {
     val result = performMtRequest().andIsOk.andReturn().mapResponseTo<Map<String, Any>>()
     val services = (result["machineTranslations"] as Map<String, String>).keys.toList()

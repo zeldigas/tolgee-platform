@@ -1,6 +1,5 @@
 package io.tolgee.controllers
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import io.tolgee.api.v2.controllers.IController
@@ -15,6 +14,7 @@ import io.tolgee.security.ratelimit.RateLimitService
 import io.tolgee.security.ratelimit.RateLimited
 import io.tolgee.service.security.PermissionService
 import io.tolgee.service.translation.TranslationService
+import io.tolgee.util.StreamType
 import io.tolgee.util.StreamingResponseBodyProvider
 import org.apache.tomcat.util.http.fileupload.IOUtils
 import org.springframework.http.ResponseEntity
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import tools.jackson.databind.ObjectMapper
 import java.io.ByteArrayInputStream
 import java.io.OutputStream
 import java.time.Duration
@@ -76,7 +77,7 @@ class ExportController(
         "attachment; filename=\"${projectHolder.project.name}.zip\"",
       )
 
-      streamingResponseBodyProvider.createStreamingResponseBody { out: OutputStream ->
+      streamingResponseBodyProvider.createStreamingResponseBody(StreamType.EXPORT_JSON_ZIP) { out: OutputStream ->
         val zipOutputStream = ZipOutputStream(out)
         val translations =
           translationService.getTranslations(

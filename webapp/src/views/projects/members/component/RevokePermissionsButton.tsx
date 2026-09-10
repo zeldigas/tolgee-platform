@@ -11,11 +11,12 @@ import { useApiMutation } from 'tg.service/http/useQueryApi';
 import { useLeaveProject } from 'tg.views/projects/useLeaveProject';
 import { useProjectPermissions } from 'tg.hooks/useProjectPermissions';
 import { messageService } from 'tg.service/MessageService';
+import { isAtLeastMemberOrgRole } from 'tg.fixtures/organizationRole';
 
 const RevokePermissionsButton = (props: {
   user: components['schemas']['UserAccountInProjectModel'];
 }) => {
-  const hasOrganizationRole = !!props.user.organizationRole;
+  const isAtLeastMember = isAtLeastMemberOrgRole(props.user.organizationRole);
   const project = useProject();
   const currentUser = useUser();
   const { satisfiesPermission } = useProjectPermissions();
@@ -26,7 +27,10 @@ const RevokePermissionsButton = (props: {
   const revokeAccess = useApiMutation({
     url: '/v2/projects/{projectId}/users/{userId}/revoke-access',
     method: 'put',
-    invalidatePrefix: '/v2/projects/{projectId}/users',
+    invalidatePrefix: [
+      '/v2/projects/{projectId}/users',
+      '/v2/projects/{projectId}/contributors',
+    ],
   });
 
   const handleRevoke = () => {
@@ -65,7 +69,7 @@ const RevokePermissionsButton = (props: {
   let isDisabled = false;
   let tooltip = undefined as ReactElement | undefined;
 
-  if (hasOrganizationRole) {
+  if (isAtLeastMember) {
     tooltip = <T keyName="user_is_part_of_organization_tooltip" />;
     isDisabled = true;
   } else if (currentUser!.id === props.user.id) {

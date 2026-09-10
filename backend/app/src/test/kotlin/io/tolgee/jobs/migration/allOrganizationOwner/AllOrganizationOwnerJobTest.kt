@@ -12,7 +12,7 @@ import io.tolgee.repository.UserAccountRepository
 import io.tolgee.testing.assertions.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.batch.core.Job
+import org.springframework.batch.core.job.Job
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 
@@ -95,7 +95,7 @@ class AllOrganizationOwnerJobTest : AbstractSpringTest() {
   fun `deletes permission`() {
     allOrganizationOwnerJobRunner.run()
     transactionTemplate.execute {
-      val firstProject = projectRepository.getById(project1.id)
+      val firstProject = projectRepository.getReferenceById(project1.id)
       assertThat(firstProject.permissions).isEmpty()
     }
   }
@@ -104,7 +104,7 @@ class AllOrganizationOwnerJobTest : AbstractSpringTest() {
   fun `reuses existing organization`() {
     allOrganizationOwnerJobRunner.run()
     transactionTemplate.execute {
-      val firstProject = projectRepository.getById(project1.id)
+      val firstProject = projectRepository.getReferenceById(project1.id)
       assertThat(firstProject.permissions).isEmpty()
     }
   }

@@ -1,7 +1,7 @@
 package io.tolgee
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import io.tolgee.Metrics
 import io.tolgee.constants.Message
 import io.tolgee.controllers.PublicController
 import io.tolgee.fixtures.andAssertThatJson
@@ -10,6 +10,7 @@ import io.tolgee.fixtures.andIsUnauthorized
 import io.tolgee.fixtures.mapResponseTo
 import io.tolgee.model.Project
 import io.tolgee.security.authentication.JwtService
+import io.tolgee.security.oauth2.OAuth2BearerChallengeProvider
 import io.tolgee.security.thirdParty.GithubOAuthDelegate.GithubEmailResponse
 import io.tolgee.testing.AbstractControllerTest
 import io.tolgee.util.GitHubAuthUtil
@@ -29,6 +30,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.util.Date
 
 @Transactional
@@ -52,10 +55,18 @@ class AuthTest : AbstractControllerTest() {
 
   private lateinit var project: Project
 
+  @Autowired
+  private lateinit var bearerChallengeProvider: OAuth2BearerChallengeProvider
+
   @BeforeEach
   fun setup() {
     project = dbPopulator.createBase().project
-    authMvc = MockMvcBuilders.standaloneSetup(publicController).setControllerAdvice(ExceptionHandlers()).build()
+    authMvc =
+      MockMvcBuilders
+        .standaloneSetup(
+          publicController!!,
+        ).setControllerAdvice(ExceptionHandlers(Metrics(SimpleMeterRegistry()), bearerChallengeProvider))
+        .build()
   }
 
   @AfterEach

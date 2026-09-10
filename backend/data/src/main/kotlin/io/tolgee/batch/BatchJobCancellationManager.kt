@@ -1,6 +1,5 @@
 package io.tolgee.batch
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.tolgee.activity.ActivityHolder
 import io.tolgee.batch.cleaning.BatchJobStatusProvider
 import io.tolgee.batch.events.JobCancelEvent
@@ -14,13 +13,14 @@ import io.tolgee.util.executeInNewTransaction
 import io.tolgee.util.logger
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
-import org.hibernate.LockOptions
+import org.hibernate.Timeouts
 import org.springframework.context.annotation.Lazy
 import org.springframework.context.event.EventListener
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
+import tools.jackson.databind.ObjectMapper
 
 @Component
 class BatchJobCancellationManager(
@@ -36,6 +36,7 @@ class BatchJobCancellationManager(
   private val batchJobChunkExecutionQueue: BatchJobChunkExecutionQueue,
   private val concurrentExecutionLauncher: BatchJobConcurrentLauncher,
   private val batchProperties: io.tolgee.configuration.tolgee.BatchProperties,
+  private val objectMapper: ObjectMapper,
 ) : Logging {
   @Transactional
   fun cancel(id: Long) {
@@ -63,7 +64,7 @@ class BatchJobCancellationManager(
     if (usingRedisProvider.areWeUsingRedis) {
       redisTemplate.convertAndSend(
         RedisPubSubReceiverConfiguration.JOB_CANCEL_TOPIC,
-        jacksonObjectMapper().writeValueAsString(id),
+        objectMapper.writeValueAsString(id),
       )
     }
     cancelLocalJob(id)
@@ -114,7 +115,7 @@ class BatchJobCancellationManager(
       ).setLockMode(LockModeType.PESSIMISTIC_WRITE)
       .setHint(
         "jakarta.persistence.lock.timeout",
-        LockOptions.SKIP_LOCKED,
+        Timeouts.SKIP_LOCKED_MILLI,
       ).setParameter("id", jobId)
       .setParameter("status", BatchJobChunkExecutionStatus.PENDING)
       .resultList

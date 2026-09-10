@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { components } from 'tg.service/apiSchema.generated';
 import { useApiQuery } from 'tg.service/http/useQueryApi';
+import { isAtLeastMemberOrgRole } from 'tg.fixtures/organizationRole';
 
 type OrganizationModel = components['schemas']['OrganizationModel'];
-type UsageModel = components['schemas']['PublicUsageModel'];
 
 type Props = {
   organization?: OrganizationModel;
@@ -14,10 +14,9 @@ export const useOrganizationUsageService = ({
   organization,
   enabled,
 }: Props) => {
-  const isOrganizationMember = Boolean(organization?.currentUserRole);
-  const [organizationUsage, setOrganizationUsage] = useState<
-    UsageModel | undefined
-  >(undefined);
+  const isOrganizationMember = isAtLeastMemberOrgRole(
+    organization?.currentUserRole
+  );
   const [planLimitErrors, setPlanLimitErrors] = useState(0);
   const [spendingLimitErrors, setSpendingLimitErrors] = useState(0);
 
@@ -39,21 +38,10 @@ export const useOrganizationUsageService = ({
       refetchOnMount: false,
       cacheTime: Infinity,
       enabled: usageEnabled,
-      onSuccess(data) {
-        setOrganizationUsage(data);
-      },
     },
   });
 
-  const updateUsageData = (data: Partial<UsageModel>) =>
-    setOrganizationUsage((val) =>
-      val
-        ? {
-            ...val,
-            ...data,
-          }
-        : val
-    );
+  const usage = usageEnabled ? usageLoadable.data : undefined;
 
   const incrementPlanLimitErrors = () => {
     setPlanLimitErrors((v) => v + 1);
@@ -103,13 +91,12 @@ export const useOrganizationUsageService = ({
 
   return {
     state: {
-      usage: organizationUsage,
+      usage,
       planLimitErrors,
       spendingLimitErrors,
     },
     actions: {
       refetchUsage,
-      updateUsageData,
       incrementPlanLimitErrors,
       incrementSpendingLimitErrors,
       increaseCreditPlanLimitErrors,

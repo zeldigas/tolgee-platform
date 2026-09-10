@@ -9,6 +9,7 @@ import io.tolgee.development.testDataBuilder.builders.GlossaryTermBuilder
 import io.tolgee.development.testDataBuilder.builders.ImportBuilder
 import io.tolgee.development.testDataBuilder.builders.InvitationBuilder
 import io.tolgee.development.testDataBuilder.builders.KeyBuilder
+import io.tolgee.development.testDataBuilder.builders.OAuth2GrantBuilder
 import io.tolgee.development.testDataBuilder.builders.PatBuilder
 import io.tolgee.development.testDataBuilder.builders.ProjectBuilder
 import io.tolgee.development.testDataBuilder.builders.TestDataBuilder
@@ -19,6 +20,7 @@ import io.tolgee.development.testDataBuilder.builders.UserPreferencesBuilder
 import io.tolgee.development.testDataBuilder.builders.slack.SlackUserConnectionBuilder
 import io.tolgee.model.Project
 import io.tolgee.repository.KeyCodeReferenceRepository
+import io.tolgee.repository.oauth2.OAuth2GrantRepository
 import io.tolgee.service.TenantService
 import io.tolgee.service.automations.AutomationService
 import io.tolgee.service.bigMeta.BigMetaService
@@ -86,6 +88,7 @@ class TestDataService(
   private val authProviderChangeService: AuthProviderChangeService,
   private val languageStatsService: LanguageStatsService,
   private val patService: PatService,
+  private val oauth2GrantRepository: OAuth2GrantRepository,
   private val notificationService: NotificationService,
   private val namespaceService: NamespaceService,
   private val bigMetaService: BigMetaService,
@@ -141,6 +144,12 @@ class TestDataService(
       }
 
       updateLanguageStats(builder)
+
+      if (builder.afterSaveRawStates.isNotEmpty()) {
+        executeInNewTransaction(transactionManager) {
+          builder.afterSaveRawStates.forEach { it(entityManager) }
+        }
+      }
     } finally {
       activityHolder.enableAutoCompletion = true
       bypassableActivityListeners.forEach { it.bypass = false }
@@ -165,8 +174,9 @@ class TestDataService(
     tryUntilItDoesntBreakConstraint {
       executeInNewTransaction(transactionManager) {
         builder.data.userAccounts.forEach {
-          userAccountService.findActive(it.self.username)?.let { user ->
+          userAccountService.findAllByUsername(it.self.username).forEach { user ->
             notificationService.deleteNotificationsOfUser(user.id)
+            oauth2GrantRepository.deleteAllByUserAccountId(user.id)
             userAccountService.delete(user)
           }
         }
@@ -610,6 +620,11 @@ class TestDataService(
     saveAuthProviderChangeRequests(userAccountBuilders.mapNotNull { it.data.authProviderChangeRequest })
     saveUserPats(userAccountBuilders.flatMap { it.data.pats })
     saveUserSlackConnections(userAccountBuilders.flatMap { it.data.slackUserConnections })
+    saveUserOAuth2Grants(userAccountBuilders.flatMap { it.data.oauth2Grants })
+  }
+
+  private fun saveUserOAuth2Grants(data: List<OAuth2GrantBuilder>) {
+    oauth2GrantRepository.saveAll(data.map { it.self })
   }
 
   private fun saveUserPats(data: List<PatBuilder>) {
@@ -744,7 +759,7 @@ class TestDataService(
   private fun encodePassword(rawPassword: String?): String? {
     rawPassword ?: return null
     return passwordHashCache.computeIfAbsent(rawPassword) {
-      passwordEncoder.encode(rawPassword)
+      passwordEncoder.encode(rawPassword)!!
     }
   }
 

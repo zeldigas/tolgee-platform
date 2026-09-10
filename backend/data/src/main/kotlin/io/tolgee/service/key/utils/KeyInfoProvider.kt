@@ -29,6 +29,7 @@ class KeyInfoProvider(
   private val screenshotService: ScreenshotService = applicationContext.getBean(ScreenshotService::class.java)
   private val translationService: TranslationService = applicationContext.getBean(TranslationService::class.java)
 
+  @Suppress("UNCHECKED_CAST")
   fun get(): List<Pair<Key, List<Screenshot>>> {
     val cb: CriteriaBuilder = entityManager.criteriaBuilder
     val query = cb.createQuery(Key::class.java)
@@ -63,7 +64,9 @@ class KeyInfoProvider(
 
     val keyPredicates = cb.or(*predicates.toTypedArray())
 
-    query.where(cb.and(keyPredicates, branchPredicate))
+    val notDeletedPredicate = cb.isNull(root.get(Key_.deletedAt))
+
+    query.where(cb.and(keyPredicates, branchPredicate, notDeletedPredicate))
     query.orderBy(cb.asc(namespace.get(Namespace_.name)), cb.asc(root.get(Key_.name)))
 
     val result = entityManager.createQuery(query).resultList

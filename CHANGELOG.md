@@ -1,3 +1,214 @@
+## [3.221.2](https://github.com/tolgee/tolgee-platform/compare/v3.221.1...v3.221.2) (2026-09-08)
+
+
+### Bug Fixes
+
+* show the plan limit popover to members without an organization role ([#3903](https://github.com/tolgee/tolgee-platform/issues/3903)) ([df1fe21](https://github.com/tolgee/tolgee-platform/commit/df1fe21f35e920e0276d8ead33f3291c132bac20))
+
+## [3.221.1](https://github.com/tolgee/tolgee-platform/compare/v3.221.0...v3.221.1) (2026-09-08)
+
+
+### Bug Fixes
+
+* stop dropping characters typed into the AI prompt editor ([#3892](https://github.com/tolgee/tolgee-platform/issues/3892)) ([c88fc7f](https://github.com/tolgee/tolgee-platform/commit/c88fc7f107e32c56967b3da05e0c2a0260ae0b70))
+* wrap long unbreakable comment text so the resolve action stays reachable ([#3906](https://github.com/tolgee/tolgee-platform/issues/3906)) ([87e178d](https://github.com/tolgee/tolgee-platform/commit/87e178d243e2afb0cd31c03c307390d801950708)), closes [#3905](https://github.com/tolgee/tolgee-platform/issues/3905)
+
+# [3.221.0](https://github.com/tolgee/tolgee-platform/compare/v3.220.0...v3.221.0) (2026-09-07)
+
+
+### Features
+
+* support Azure Blob Storage as main file storage ([91534b2](https://github.com/tolgee/tolgee-platform/commit/91534b2ad1d78101ba80872883d9d4ccbb50c147))
+
+# [3.220.0](https://github.com/tolgee/tolgee-platform/compare/v3.219.7...v3.220.0) (2026-09-05)
+
+
+### Features
+
+* OAuth 2.1 authorization server ([#3893](https://github.com/tolgee/tolgee-platform/issues/3893)) ([6ef6a0f](https://github.com/tolgee/tolgee-platform/commit/6ef6a0f931a69987dce563ceba329032dc3006f5)), closes [#3849](https://github.com/tolgee/tolgee-platform/issues/3849) [#3879](https://github.com/tolgee/tolgee-platform/issues/3879) [#3880](https://github.com/tolgee/tolgee-platform/issues/3880) [#3885](https://github.com/tolgee/tolgee-platform/issues/3885) [#3826](https://github.com/tolgee/tolgee-platform/issues/3826) [tolgee/billing#311](https://github.com/tolgee/billing/issues/311)
+
+## [3.219.7](https://github.com/tolgee/tolgee-platform/compare/v3.219.6...v3.219.7) (2026-09-02)
+
+
+### Bug Fixes
+
+* bump Jackson to 2.21.6 / 3.1.6 to patch CVE-2026-19032 ([#3895](https://github.com/tolgee/tolgee-platform/issues/3895)) ([2ec5372](https://github.com/tolgee/tolgee-platform/commit/2ec537287bd270bf71f15b29d0c3a9bc7f386a8f)), closes [#3866](https://github.com/tolgee/tolgee-platform/issues/3866) [#3840](https://github.com/tolgee/tolgee-platform/issues/3840) [#3857](https://github.com/tolgee/tolgee-platform/issues/3857) [#6115](https://github.com/tolgee/tolgee-platform/issues/6115) [#6156](https://github.com/tolgee/tolgee-platform/issues/6156) [#6101](https://github.com/tolgee/tolgee-platform/issues/6101) [#6133](https://github.com/tolgee/tolgee-platform/issues/6133) [#6165](https://github.com/tolgee/tolgee-platform/issues/6165)
+
+## [3.219.6](https://github.com/tolgee/tolgee-platform/compare/v3.219.5...v3.219.6) (2026-09-02)
+
+
+### Bug Fixes
+
+* hard-delete project fails on branch merge, snapshot and content delivery FKs ([#3853](https://github.com/tolgee/tolgee-platform/issues/3853)) ([857b8e7](https://github.com/tolgee/tolgee-platform/commit/857b8e70da997d181bc8409fc1394498b9bf4943)), closes [#3832](https://github.com/tolgee/tolgee-platform/issues/3832) [#3832](https://github.com/tolgee/tolgee-platform/issues/3832) [#3804](https://github.com/tolgee/tolgee-platform/issues/3804) [#3832](https://github.com/tolgee/tolgee-platform/issues/3832)
+
+## [3.219.5](https://github.com/tolgee/tolgee-platform/compare/v3.219.4...v3.219.5) (2026-09-01)
+
+
+### Bug Fixes
+
+* size the async and streaming thread pools instead of leaving both single-threaded ([#3843](https://github.com/tolgee/tolgee-platform/issues/3843)) ([cf3cb3c](https://github.com/tolgee/tolgee-platform/commit/cf3cb3cd0af09b3e9152e13b7993642cb945424a)), closes [tolgee/deployment#801](https://github.com/tolgee/deployment/issues/801) [tolgee/deployment#801](https://github.com/tolgee/deployment/issues/801) [tolgee/billing#291](https://github.com/tolgee/billing/issues/291)
+
+## [3.219.4](https://github.com/tolgee/tolgee-platform/compare/v3.219.3...v3.219.4) (2026-08-31)
+
+
+### Bug Fixes
+
+* keep re-launched batch chunks cancellable ([#3881](https://github.com/tolgee/tolgee-platform/issues/3881)) ([5c48854](https://github.com/tolgee/tolgee-platform/commit/5c48854b6d31a6ffab7db4576c858a70519d89dc))
+
+## [3.219.3](https://github.com/tolgee/tolgee-platform/compare/v3.219.2...v3.219.3) (2026-08-28)
+
+
+### Bug Fixes
+
+* bump vulnerable dependencies flagged by Snyk ([#3877](https://github.com/tolgee/tolgee-platform/issues/3877)) ([a502bd5](https://github.com/tolgee/tolgee-platform/commit/a502bd568634b962f95cfd01b7ee319734cda53c))
+
+## [3.219.2](https://github.com/tolgee/tolgee-platform/compare/v3.219.1...v3.219.2) (2026-08-27)
+
+
+### Bug Fixes
+
+* bump Spring Boot to 4.1.1 to patch Snyk-reported vulnerabilities ([#3876](https://github.com/tolgee/tolgee-platform/issues/3876)) ([3abfbb5](https://github.com/tolgee/tolgee-platform/commit/3abfbb58b1a4892bc11c5edcf0002df28e432e81)), closes [#3804](https://github.com/tolgee/tolgee-platform/issues/3804) [#3866](https://github.com/tolgee/tolgee-platform/issues/3866)
+
+## [3.219.1](https://github.com/tolgee/tolgee-platform/compare/v3.219.0...v3.219.1) (2026-08-26)
+
+
+### Bug Fixes
+
+* Text overflow in keys Search field/[#3852](https://github.com/tolgee/tolgee-platform/issues/3852) ([#3875](https://github.com/tolgee/tolgee-platform/issues/3875)) ([44fa434](https://github.com/tolgee/tolgee-platform/commit/44fa43436469d4c12ea0cf0daede769fb1262c50))
+
+# [3.219.0](https://github.com/tolgee/tolgee-platform/compare/v3.218.6...v3.219.0) (2026-08-26)
+
+
+### Features
+
+* show non-breaking and zero-width characters in the web UI ([#3850](https://github.com/tolgee/tolgee-platform/issues/3850)) ([6f2f89b](https://github.com/tolgee/tolgee-platform/commit/6f2f89b062e9d95567345af75d4501edef7dd9a4)), closes [#3041](https://github.com/tolgee/tolgee-platform/issues/3041)
+
+## [3.218.6](https://github.com/tolgee/tolgee-platform/compare/v3.218.5...v3.218.6) (2026-08-22)
+
+
+### Bug Fixes
+
+* bump netty to 4.2.17 via Spring dependency-management property ([#3866](https://github.com/tolgee/tolgee-platform/issues/3866)) ([0e7563f](https://github.com/tolgee/tolgee-platform/commit/0e7563fbd8e90c86a6043c6de9ed56892cdb1d18)), closes [#3865](https://github.com/tolgee/tolgee-platform/issues/3865)
+
+## [3.218.5](https://github.com/tolgee/tolgee-platform/compare/v3.218.4...v3.218.5) (2026-08-22)
+
+
+### Bug Fixes
+
+* drop httpclient5 5.4.4 pin, use Spring Boot managed version ([#3865](https://github.com/tolgee/tolgee-platform/issues/3865)) ([fcee7a3](https://github.com/tolgee/tolgee-platform/commit/fcee7a3877d78e39c5a1a3f599b9a091244b9073))
+
+## [3.218.4](https://github.com/tolgee/tolgee-platform/compare/v3.218.3...v3.218.4) (2026-08-21)
+
+
+### Bug Fixes
+
+* add tooltip and responsive wrapping for long language names ([#3611](https://github.com/tolgee/tolgee-platform/issues/3611)) ([#3657](https://github.com/tolgee/tolgee-platform/issues/3657)) ([4d3755c](https://github.com/tolgee/tolgee-platform/commit/4d3755c1cec65211d9108b7e5a6871dc9f1da887))
+
+## [3.218.3](https://github.com/tolgee/tolgee-platform/compare/v3.218.2...v3.218.3) (2026-08-18)
+
+
+### Bug Fixes
+
+* Revert "fix: set correct MIME type on content delivery published files ([#3836](https://github.com/tolgee/tolgee-platform/issues/3836))" ([eca6fbe](https://github.com/tolgee/tolgee-platform/commit/eca6fbe0ae83d8f20b1553a024fd28e238db3c25))
+
+## [3.218.2](https://github.com/tolgee/tolgee-platform/compare/v3.218.1...v3.218.2) (2026-08-18)
+
+
+### Bug Fixes
+
+* restore Jackson 2 handling of absent numeric fields ([#3857](https://github.com/tolgee/tolgee-platform/issues/3857)) ([510ca06](https://github.com/tolgee/tolgee-platform/commit/510ca06d8c81a0a06eb14fdb0f20d803ece56eaa)), closes [#3804](https://github.com/tolgee/tolgee-platform/issues/3804) [#3856](https://github.com/tolgee/tolgee-platform/issues/3856)
+
+## [3.218.1](https://github.com/tolgee/tolgee-platform/compare/v3.218.0...v3.218.1) (2026-08-17)
+
+
+### Bug Fixes
+
+* set correct MIME type on content delivery published files ([#3836](https://github.com/tolgee/tolgee-platform/issues/3836)) ([299dc9d](https://github.com/tolgee/tolgee-platform/commit/299dc9d1d9f3e15ed7ae336826edafc098f56cc9)), closes [#2504](https://github.com/tolgee/tolgee-platform/issues/2504)
+
+# [3.218.0](https://github.com/tolgee/tolgee-platform/compare/v3.217.0...v3.218.0) (2026-08-06)
+
+
+### Features
+
+* add character counter to AI and project description fields ([#3847](https://github.com/tolgee/tolgee-platform/issues/3847)) ([70957ca](https://github.com/tolgee/tolgee-platform/commit/70957ca3baae9268830b81be3c111404fe69f89d)), closes [#3833](https://github.com/tolgee/tolgee-platform/issues/3833)
+
+# [3.217.0](https://github.com/tolgee/tolgee-platform/compare/v3.216.4...v3.217.0) (2026-08-06)
+
+
+### Features
+
+* server default LLM model selectable as "default" in prompts ([#3838](https://github.com/tolgee/tolgee-platform/issues/3838)) ([a434007](https://github.com/tolgee/tolgee-platform/commit/a4340079d8bf61354e43bd6ae4e8165034e0f641))
+
+## [3.216.4](https://github.com/tolgee/tolgee-platform/compare/v3.216.3...v3.216.4) (2026-08-05)
+
+
+### Performance Improvements
+
+* reduce Redis round-trips in pub/sub and batch-job state ([#3822](https://github.com/tolgee/tolgee-platform/issues/3822)) ([653b6eb](https://github.com/tolgee/tolgee-platform/commit/653b6eb2b40f8079489a626070ffc7996a1bf99b))
+
+## [3.216.3](https://github.com/tolgee/tolgee-platform/compare/v3.216.2...v3.216.3) (2026-08-05)
+
+
+### Bug Fixes
+
+* escape task and language names in notification emails ([#3842](https://github.com/tolgee/tolgee-platform/issues/3842)) ([e7b7a29](https://github.com/tolgee/tolgee-platform/commit/e7b7a29ca8bc6fe947b6a7ad0e1561297294e246)), closes [#1898](https://github.com/tolgee/tolgee-platform/issues/1898)
+
+## [3.216.2](https://github.com/tolgee/tolgee-platform/compare/v3.216.1...v3.216.2) (2026-08-04)
+
+
+### Bug Fixes
+
+* default isBatch on the legacy translate endpoint under Jackson 3 ([#3840](https://github.com/tolgee/tolgee-platform/issues/3840)) ([748f7c1](https://github.com/tolgee/tolgee-platform/commit/748f7c1f3e8ab103097b5516290558b4e684fb08)), closes [#3804](https://github.com/tolgee/tolgee-platform/issues/3804)
+
+## [3.216.1](https://github.com/tolgee/tolgee-platform/compare/v3.216.0...v3.216.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* strip structural newlines from plural source in AI translator prompt ([#3830](https://github.com/tolgee/tolgee-platform/issues/3830)) ([b435134](https://github.com/tolgee/tolgee-platform/commit/b435134d8640d093865707f2e30122bcad6d8b46))
+
+# [3.216.0](https://github.com/tolgee/tolgee-platform/compare/v3.215.0...v3.216.0) (2026-08-03)
+
+
+### Features
+
+* support Google Workspace as SSO provider ([#3837](https://github.com/tolgee/tolgee-platform/issues/3837)) ([03b144d](https://github.com/tolgee/tolgee-platform/commit/03b144d6fcaa8e66c4964812ab9449f09f596043))
+
+# [3.215.0](https://github.com/tolgee/tolgee-platform/compare/v3.214.1...v3.215.0) (2026-07-30)
+
+
+### Features
+
+* auto-invalidate caches by value shape instead of wiping on startup ([#3813](https://github.com/tolgee/tolgee-platform/issues/3813)) ([7e1db10](https://github.com/tolgee/tolgee-platform/commit/7e1db10ceb734c412fab34cc27eccc30ff5e577c))
+* Community translation v1.1 — Contributors (pitch [#3806](https://github.com/tolgee/tolgee-platform/issues/3806)) ([#3819](https://github.com/tolgee/tolgee-platform/issues/3819)) ([3232c4f](https://github.com/tolgee/tolgee-platform/commit/3232c4fe61c87759ecd30bb1fbbfc63123919acb))
+* deprecate embedded postgres ahead of v4 ([#3610](https://github.com/tolgee/tolgee-platform/issues/3610)) ([3cef7ad](https://github.com/tolgee/tolgee-platform/commit/3cef7ad2fb0a878a5d9291b53892c5c6dc6930f6)), closes [tolgee/documentation#1121](https://github.com/tolgee/documentation/issues/1121) [tolgee/billing#274](https://github.com/tolgee/billing/issues/274) [#3193](https://github.com/tolgee/tolgee-platform/issues/3193)
+
+## [3.214.1](https://github.com/tolgee/tolgee-platform/compare/v3.214.0...v3.214.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* exclude soft-deleted keys from the keys/info endpoint ([#3818](https://github.com/tolgee/tolgee-platform/issues/3818)) ([dd24ad1](https://github.com/tolgee/tolgee-platform/commit/dd24ad13a50d251ac80e6206e97e4bdc69aae705)), closes [#3817](https://github.com/tolgee/tolgee-platform/issues/3817) [#3486](https://github.com/tolgee/tolgee-platform/issues/3486)
+* hard-delete of a project with a default namespace fails on FK constraint ([#3810](https://github.com/tolgee/tolgee-platform/issues/3810)) ([769ae0f](https://github.com/tolgee/tolgee-platform/commit/769ae0ff37d53f0bfa9fc8b3e7abc68b13cad143)), closes [#3783](https://github.com/tolgee/tolgee-platform/issues/3783)
+* prevent long language names from shrinking dashboard progress bars ([#3811](https://github.com/tolgee/tolgee-platform/issues/3811)) ([0d09306](https://github.com/tolgee/tolgee-platform/commit/0d0930698740f6320e164375d12ac00f9b0e7ff0)), closes [#3657](https://github.com/tolgee/tolgee-platform/issues/3657) [#3657](https://github.com/tolgee/tolgee-platform/issues/3657)
+* purge trashed keys that have translation suggestions ([#3800](https://github.com/tolgee/tolgee-platform/issues/3800)) ([e0f4888](https://github.com/tolgee/tolgee-platform/commit/e0f48887d3aa2cca16cf2994ae3e7eb200bdb2f4))
+* serialize cached enums by name instead of ordinal ([#3807](https://github.com/tolgee/tolgee-platform/issues/3807)) ([323d271](https://github.com/tolgee/tolgee-platform/commit/323d271600c9e75519eaa8ffba76b73b58aafcb9))
+
+# [3.214.0](https://github.com/tolgee/tolgee-platform/compare/v3.213.1...v3.214.0) (2026-07-20)
+
+
+### Features
+
+* warn about invalid ICU placeholders in the editor ([#3782](https://github.com/tolgee/tolgee-platform/issues/3782)) ([95838f5](https://github.com/tolgee/tolgee-platform/commit/95838f52443efa0028b7e9317138da33bd85204e)), closes [tolgee/editor#10](https://github.com/tolgee/editor/issues/10) [tolgee/editor#10](https://github.com/tolgee/editor/issues/10)
+
+## [3.213.1](https://github.com/tolgee/tolgee-platform/compare/v3.213.0...v3.213.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* community access to public-project organizations ([#3808](https://github.com/tolgee/tolgee-platform/issues/3808)) ([6a7f73f](https://github.com/tolgee/tolgee-platform/commit/6a7f73f4811c357b09e0928816f1302f9e11c097)), closes [#3770](https://github.com/tolgee/tolgee-platform/issues/3770) [#3792](https://github.com/tolgee/tolgee-platform/issues/3792) [#3765](https://github.com/tolgee/tolgee-platform/issues/3765) [#3792](https://github.com/tolgee/tolgee-platform/issues/3792) [#3792](https://github.com/tolgee/tolgee-platform/issues/3792)
+* keep websocket connection alive when a subscription is denied ([#3809](https://github.com/tolgee/tolgee-platform/issues/3809)) ([1235ad1](https://github.com/tolgee/tolgee-platform/commit/1235ad17b1d474b638f9dfe5c08dfbef03d48294)), closes [#3529](https://github.com/tolgee/tolgee-platform/issues/3529) [#3621](https://github.com/tolgee/tolgee-platform/issues/3621) [#3621](https://github.com/tolgee/tolgee-platform/issues/3621)
+
 # [3.213.0](https://github.com/tolgee/tolgee-platform/compare/v3.212.1...v3.213.0) (2026-07-16)
 
 

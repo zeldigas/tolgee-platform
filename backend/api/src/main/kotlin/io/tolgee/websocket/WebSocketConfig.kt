@@ -3,6 +3,7 @@ package io.tolgee.websocket
 import io.tolgee.dtos.cacheable.ApiKeyDto
 import io.tolgee.exceptions.PermissionException
 import io.tolgee.model.enums.Scope
+import io.tolgee.security.authentication.ScopedCredential
 import io.tolgee.security.authentication.TolgeeAuthentication
 import io.tolgee.service.security.SecurityService
 import io.tolgee.util.logger
@@ -17,6 +18,7 @@ import org.springframework.messaging.simp.stomp.StompCommand
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.ChannelInterceptor
 import org.springframework.messaging.support.MessageHeaderAccessor
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer
@@ -43,93 +45,123 @@ class WebSocketConfig(
         override fun preSend(
           message: Message<*>,
           channel: MessageChannel,
-        ): Message<*> {
+        ): Message<*>? {
           val accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor::class.java)
 
           if (accessor?.command == StompCommand.CONNECT) {
             accessor.user = websocketAuthenticationResolver.resolve(accessor)
           }
 
-          val authentication = accessor?.user as? TolgeeAuthentication
-
-          if (accessor?.command == StompCommand.SUBSCRIBE) {
-            checkProjectPathPermissionsAuth(authentication, accessor.destination)
-            checkUserPathPermissionsAuth(authentication, accessor.destination)
+          if (accessor?.command != StompCommand.SUBSCRIBE) {
+            return message
           }
 
-          return message
+          val authentication = accessor.user as? TolgeeAuthentication
+          return when (decideSubscribe(authentication, accessor.destination)) {
+            SubscribeDecision.DENY -> null
+            // Throwing here makes Spring close the whole WebSocket, not just reject the SUBSCRIBE.
+            SubscribeDecision.UNAUTHENTICATED -> throw MessagingException("Unauthenticated")
+            SubscribeDecision.ALLOW -> message
+          }
         }
       },
     )
   }
 
-  fun checkProjectPathPermissionsAuth(
+  private enum class SubscribeDecision {
+    ALLOW,
+    DENY,
+    UNAUTHENTICATED,
+  }
+
+  private fun decideSubscribe(
     authentication: TolgeeAuthentication?,
     destination: String?,
-  ) {
-    val projectId =
-      destination?.let {
-        "/projects/([0-9]+)"
-          .toRegex()
-          .find(it)
-          ?.groupValues
-          ?.getOrNull(1)
-          ?.toLong()
-      } ?: return
-
-    if (authentication == null) {
-      throw MessagingException("Unauthenticated")
+  ): SubscribeDecision {
+    val projectId = topicId(PROJECT_TOPIC, destination)
+    if (projectId != null) {
+      val auth = authentication ?: return SubscribeDecision.UNAUTHENTICATED
+      return decision(isProjectSubscribeAllowed(auth, projectId), destination)
     }
 
-    val apiKey = authentication.credentials as? ApiKeyDto
-    val user = authentication.principal
+    val userId = topicId(USER_TOPIC, destination)
+    if (userId != null) {
+      val auth = authentication ?: return SubscribeDecision.UNAUTHENTICATED
+      return decision(isUserSubscribeAllowed(auth, userId), destination)
+    }
 
+    logger().debug("Denying websocket subscription to unrecognized destination {}", destination)
+    return SubscribeDecision.DENY
+  }
+
+  private fun topicId(
+    topic: Regex,
+    destination: String?,
+  ): Long? =
+    topic
+      .find(destination.orEmpty())
+      ?.groupValues
+      ?.get(1)
+      // toLongOrNull, not toLong: an overflow id must fall through to deny, not throw (which closes the connection).
+      ?.toLongOrNull()
+
+  private fun decision(
+    allowed: Boolean,
+    destination: String?,
+  ): SubscribeDecision {
+    if (allowed) return SubscribeDecision.ALLOW
+    logger().debug("Denying websocket subscription to {}", destination)
+    return SubscribeDecision.DENY
+  }
+
+  private fun isProjectSubscribeAllowed(
+    authentication: TolgeeAuthentication,
+    projectId: Long,
+  ): Boolean {
     try {
-      securityService.checkProjectPermission(
-        projectId = projectId,
-        requiredPermission = Scope.KEYS_VIEW,
-        user = user,
-        apiKey = apiKey,
-      )
+      // SecurityService.checkProjectPermissionNoApiKey reads the scoped credential off the SecurityContext.
+      withSecurityContext(authentication) {
+        securityService.checkProjectPermission(
+          projectId = projectId,
+          requiredPermission = Scope.KEYS_VIEW,
+          user = authentication.principal,
+          credential = authentication.credentials as? ScopedCredential,
+        )
+      }
     } catch (e: PermissionException) {
       logger().debug("User / API key does not have required scopes", e)
-      throwForbidden()
+      return false
     }
-
-    return
+    return true
   }
 
-  fun checkUserPathPermissionsAuth(
-    authentication: TolgeeAuthentication?,
-    destination: String?,
-  ) {
-    val userId =
-      destination?.let {
-        "/users/([0-9]+)"
-          .toRegex()
-          .find(it)
-          ?.groupValues
-          ?.getOrNull(1)
-          ?.toLong()
-      } ?: return
-
-    if (authentication == null) {
-      throw MessagingException("Unauthenticated")
+  private fun isUserSubscribeAllowed(
+    authentication: TolgeeAuthentication,
+    userId: Long,
+  ): Boolean {
+    if (authentication.credentials is ApiKeyDto) {
+      return false
     }
+    return authentication.principal.id == userId
+  }
 
-    val creds = authentication.credentials
-    if (creds is ApiKeyDto) {
-      // API keys must not subscribe to user topics
-      throw MessagingException("Forbidden")
-    }
-
-    val user = (authentication as? TolgeeAuthentication)?.principal
-    if (user?.id != userId) {
-      throw MessagingException("Forbidden")
+  private fun <T> withSecurityContext(
+    authentication: TolgeeAuthentication,
+    body: () -> T,
+  ): T {
+    val previous = SecurityContextHolder.getContext()
+    try {
+      SecurityContextHolder.setContext(
+        SecurityContextHolder.createEmptyContext().apply { this.authentication = authentication },
+      )
+      return body()
+    } finally {
+      SecurityContextHolder.setContext(previous)
     }
   }
 
-  private fun throwForbidden() {
-    throw MessagingException("Forbidden")
+  private companion object {
+    val PROJECT_TOPIC = "^/projects/([0-9]+)/".toRegex()
+    val USER_TOPIC = "^/users/([0-9]+)/".toRegex()
   }
 }

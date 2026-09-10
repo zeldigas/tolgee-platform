@@ -1,6 +1,5 @@
 package io.tolgee.api.v2.controllers.suggestion
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.sentry.Sentry
 import io.tolgee.constants.MtServiceType
 import io.tolgee.dtos.cacheable.ProjectDto
@@ -17,6 +16,7 @@ import io.tolgee.service.machineTranslation.MtService
 import io.tolgee.service.machineTranslation.MtServiceInfo
 import io.tolgee.service.machineTranslation.MtTranslatorResult
 import io.tolgee.util.Logging
+import io.tolgee.util.StreamType
 import io.tolgee.util.StreamingResponseBodyProvider
 import io.tolgee.util.debug
 import io.tolgee.util.logger
@@ -27,6 +27,7 @@ import kotlinx.coroutines.runBlocking
 import org.springframework.context.ApplicationContext
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody
+import tools.jackson.databind.ObjectMapper
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 
@@ -43,7 +44,7 @@ class MtResultStreamer(
     val info = getInfo()
     val securityContext = SecurityContextHolder.getContext()
 
-    return streamingResponseBodyProvider.createStreamingResponseBody { outputStream ->
+    return streamingResponseBodyProvider.createStreamingResponseBody(StreamType.MT_SUGGEST) { outputStream ->
       SecurityContextHolder.setContext(securityContext)
       try {
         this.outputStream = outputStream

@@ -1,6 +1,5 @@
 package io.tolgee.batch
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.annotations.WithSpan
@@ -27,13 +26,14 @@ import io.tolgee.util.executeInNewTransaction
 import io.tolgee.util.logger
 import jakarta.persistence.EntityManager
 import jakarta.persistence.LockModeType
-import org.hibernate.LockOptions
+import org.hibernate.Timeouts
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Lazy
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.UnexpectedRollbackException
+import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.util.concurrent.CancellationException
 import kotlin.coroutines.coroutineContext
 
@@ -285,7 +285,7 @@ class BatchJobActionService(
       .setLockMode(LockModeType.PESSIMISTIC_WRITE)
       .setHint(
         "jakarta.persistence.lock.timeout",
-        LockOptions.SKIP_LOCKED,
+        Timeouts.SKIP_LOCKED_MILLI,
       ).resultList
       .singleOrNull()
   }

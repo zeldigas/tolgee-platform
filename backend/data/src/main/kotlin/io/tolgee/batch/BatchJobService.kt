@@ -1,6 +1,5 @@
 package io.tolgee.batch
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.tolgee.batch.data.AllIncompleteJobsResult
 import io.tolgee.batch.data.BatchJobDto
 import io.tolgee.batch.data.BatchJobType
@@ -31,7 +30,7 @@ import io.tolgee.util.flushAndClear
 import io.tolgee.util.logger
 import jakarta.persistence.EntityManager
 import org.apache.commons.codec.digest.DigestUtils.sha256Hex
-import org.hibernate.LockOptions
+import org.hibernate.Timeouts
 import org.postgresql.util.PGobject
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Lazy
@@ -41,6 +40,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.event.TransactionalEventListener
+import tools.jackson.databind.ObjectMapper
 import java.sql.Timestamp
 import java.time.Duration
 import java.util.Date
@@ -285,7 +285,7 @@ class BatchJobService(
       securityService.checkProjectPermission(projectId, Scope.BATCH_JOBS_VIEW)
       null
     } catch (e: PermissionException) {
-      if (authenticationFacade.isProjectApiKeyAuth) {
+      if (!authenticationFacade.canUseAuthorSelfAccess) {
         throw e
       }
       authenticationFacade.authenticatedUser.id
@@ -353,10 +353,11 @@ class BatchJobService(
       ).setParameter("jobIds", jobIds)
       .setHint(
         "jakarta.persistence.lock.timeout",
-        LockOptions.SKIP_LOCKED,
+        Timeouts.SKIP_LOCKED_MILLI,
       ).resultList
   }
 
+  @Suppress("UNCHECKED_CAST")
   fun getProcessor(type: BatchJobType): ChunkProcessor<Any, Any, Any> =
     applicationContext.getBean(type.processor.java) as ChunkProcessor<Any, Any, Any>
 
@@ -416,12 +417,11 @@ class BatchJobService(
           and j.type = :type
           and j.status not in :completedStatuses
         """.trimIndent(),
-        java.lang.Boolean::class.java,
+        Boolean::class.javaObjectType,
       ).setParameter("projectId", projectId)
       .setParameter("type", type)
       .setParameter("completedStatuses", BatchJobStatus.entries.filter { it.completed })
       .singleResult
-      .booleanValue()
   }
 
   fun getExecutions(batchJobId: Long): List<BatchJobChunkExecution> {

@@ -1,8 +1,5 @@
 package io.tolgee
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.tolgee.component.AllCachesProvider
 import io.tolgee.component.CurrentDateProvider
 import io.tolgee.component.SchedulingManager
 import io.tolgee.component.fileStorage.FileStorage
@@ -67,6 +64,8 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.support.TransactionTemplate
+import tools.jackson.databind.ObjectMapper
+import tools.jackson.module.kotlin.readValue
 import java.time.Duration
 import java.util.Date
 
@@ -223,9 +222,6 @@ abstract class AbstractSpringTest : AbstractTransactionalTest() {
   lateinit var currentDateProvider: CurrentDateProvider
 
   @Autowired
-  lateinit var allCachesProvider: AllCachesProvider
-
-  @Autowired
   lateinit var objectMapper: ObjectMapper
 
   @Autowired
@@ -236,7 +232,7 @@ abstract class AbstractSpringTest : AbstractTransactionalTest() {
 
   @BeforeEach
   fun clearCaches() {
-    allCachesProvider.getAllCaches().forEach { cacheName ->
+    cacheManager.cacheNames.forEach { cacheName ->
       cacheManager.getCache(cacheName)?.clear()
     }
   }

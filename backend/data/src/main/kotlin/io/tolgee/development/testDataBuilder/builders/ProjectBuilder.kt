@@ -11,6 +11,7 @@ import io.tolgee.model.Permission
 import io.tolgee.model.Project
 import io.tolgee.model.Prompt
 import io.tolgee.model.Screenshot
+import io.tolgee.model.UserAccount
 import io.tolgee.model.automations.Automation
 import io.tolgee.model.batch.BatchJob
 import io.tolgee.model.branching.Branch
@@ -38,6 +39,7 @@ import io.tolgee.model.translationMemory.TranslationMemory
 import io.tolgee.model.translationMemory.TranslationMemoryType
 import io.tolgee.model.webhook.WebhookConfig
 import org.springframework.core.io.ClassPathResource
+import java.util.Date
 
 class ProjectBuilder(
   organizationOwner: Organization? = null,
@@ -57,7 +59,14 @@ class ProjectBuilder(
       this.organizationOwner = organizationOwner
     }
 
+  /** A contribution is an activity_revision row, not a JPA entity of its own — see ContributionTestDataSaver. */
+  class Contribution(
+    val author: UserAccount,
+    val at: Date?,
+  )
+
   class DATA {
+    val contributions = mutableListOf<Contribution>()
     val permissions = mutableListOf<PermissionBuilder>()
     val languages = mutableListOf<LanguageBuilder>()
     val imports = mutableListOf<ImportBuilder>()
@@ -101,6 +110,13 @@ class ProjectBuilder(
   fun addImport(ft: FT<Import> = {}) = addOperation(data.imports, ImportBuilder(this), ft)
 
   fun addLanguage(ft: FT<Language>) = addOperation(data.languages, ft)
+
+  fun addContribution(
+    author: UserAccount,
+    at: Date? = null,
+  ) {
+    data.contributions.add(Contribution(author, at))
+  }
 
   fun addKey(ft: FT<Key>) = addOperation(data.keys, ft)
 
@@ -314,5 +330,23 @@ class ProjectBuilder(
             tm.data.projectAssignments.any { it.self.project === self }
         }
     if (!alreadyDeclared) addProjectTm()
+  }
+
+  fun setDeletedAt(deletedAt: Date = Date()) {
+    testDataBuilder.rawUpdateAfterSave("update project set deleted_at = :deletedAt where id = :id") {
+      mapOf("deletedAt" to deletedAt, "id" to self.id)
+    }
+  }
+
+  fun clearBaseLanguage() {
+    testDataBuilder.rawUpdateAfterSave("update project set base_language_id = null where id = :id") {
+      mapOf("id" to self.id)
+    }
+  }
+
+  fun clearOrganizationOwner() {
+    testDataBuilder.rawUpdateAfterSave("update project set organization_owner_id = null where id = :id") {
+      mapOf("id" to self.id)
+    }
   }
 }

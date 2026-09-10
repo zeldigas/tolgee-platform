@@ -1,12 +1,12 @@
 package io.tolgee.formats.apple.`in`.xcstrings
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import io.tolgee.exceptions.ImportCannotParseFileException
 import io.tolgee.formats.ImportFileProcessor
 import io.tolgee.formats.apple.`in`.guessNamespaceFromPath
 import io.tolgee.formats.importCommon.ImportFormat
 import io.tolgee.service.dataImport.processors.FileProcessorContext
+import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
 
 class XcstringsFileProcessor(
   override val context: FileProcessorContext,
@@ -17,14 +17,14 @@ class XcstringsFileProcessor(
   override fun process() {
     try {
       val root = objectMapper.readTree(context.file.data.inputStream())
-      sourceLanguage = root.get("sourceLanguage")?.asText()
+      sourceLanguage = root.get("sourceLanguage")?.asString()
         ?: throw ImportCannotParseFileException(context.file.name, "Missing sourceLanguage in xcstrings file")
 
       val strings =
         root.get("strings")
           ?: throw ImportCannotParseFileException(context.file.name, "Missing 'strings' object in xcstrings file")
 
-      strings.fields().forEach { (key, value) ->
+      strings.properties().forEach { (key, value) ->
         processKey(key, value)
       }
 
@@ -64,7 +64,7 @@ class XcstringsFileProcessor(
   ) {
     val localizations = value.get("localizations") ?: return
 
-    value.get("comment")?.asText()?.let { comment ->
+    value.get("comment")?.asString()?.let { comment ->
       context.addKeyDescription(key, comment)
     }
 
@@ -72,7 +72,7 @@ class XcstringsFileProcessor(
       addConvertedTranslation(key, sourceLanguage, key)
     }
 
-    localizations.fields().forEach { (languageTag, localization) ->
+    localizations.properties().forEach { (languageTag, localization) ->
       when {
         localization.has("stringUnit") -> {
           processSingleTranslation(key, languageTag, localization)
@@ -91,9 +91,9 @@ class XcstringsFileProcessor(
     localization: JsonNode,
   ) {
     val stringUnit = localization.get("stringUnit")
-    stringUnit?.get("state")?.asText()
+    stringUnit?.get("state")?.asString()
 
-    val translationValue = stringUnit?.get("value")?.asText()
+    val translationValue = stringUnit?.get("value")?.asString()
 
     if (translationValue != null) {
       addConvertedTranslation(key, languageTag, translationValue)
@@ -109,9 +109,9 @@ class XcstringsFileProcessor(
     val variations = localization.get("variations")?.get("plural") ?: return
     val forms = mutableMapOf<String, String>()
 
-    variations.fields().forEach { (form, content) ->
+    variations.properties().forEach { (form, content) ->
       val stringUnit = content.get("stringUnit")
-      val value = stringUnit?.get("value")?.asText()
+      val value = stringUnit?.get("value")?.asString()
 
       if (value != null) {
         forms[form] = value
