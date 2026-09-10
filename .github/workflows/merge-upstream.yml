@@ -1,0 +1,78 @@
+name: Merge upstream
+
+on:
+  schedule:
+    - cron: "0 6 * * 6" # every Saturday, 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      skip_build_check:
+        description: "Skip the compile/typecheck safety net"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # push feature/no_ee, upstream-sync, and tags
+  actions: write # gh workflow run release.yml
+  issues: write # open/update a tracking issue on failure
+
+jobs:
+  merge:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-env
+
+      - name: Install library dependencies
+        run: npm ci
+        working-directory: ./library
+
+      - name: Install webapp dependencies
+        run: npm ci
+        working-directory: ./webapp
+
+      - name: Run merge script
+        run: |
+          ARGS=()
+          if [ "${{ inputs.skip_build_check }}" = "true" ]; then
+            ARGS+=(--skip-build-check)
+          fi
+          .github/merge_upstream.sh "${ARGS[@]}"
+
+      - name: Trigger release
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run release.yml --ref feature/no_ee
+
+      - name: File/update tracking issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY=$(git log -1 --format=%B 2>/dev/null || echo "See workflow run for details.")
+          RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          EXISTING=$(gh issue list --search "Upstream merge needs attention in:title" --state open --json number --jq '.[0].number')
+          FULL_BODY="${BODY}
+
+          Failed run: ${RUN_URL}
+
+          To finish locally:
+              git fetch origin upstream-sync
+              git checkout upstream-sync
+              # resolve, then: git add -A && git commit
+              .github/merge_upstream.sh --continue"
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" --body "$FULL_BODY"
+          else
+            gh issue create --title "Upstream merge needs attention" --body "$FULL_BODY"
+          fi
