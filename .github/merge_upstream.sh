@@ -15,6 +15,10 @@ UPSTREAM_BRANCH="main"
 ORIGIN_REMOTE="origin"
 TARGET_BRANCH="feature/no_ee"
 WORK_BRANCH="upstream-sync"
+# Whole directory trees that only exist to support the EE build and are
+# always safe to drop entirely (backend/*/src/mainEe/** is a Gradle source
+# set only wired in when ee/backend/app exists - see settings.gradle /
+# backend/development/build.gradle).
 EE_PATHS=(ee webapp/src/ee)
 
 CONTINUE=false
@@ -37,6 +41,34 @@ done
 
 log() { echo "==> $*"; }
 err() { echo "ERROR: $*" >&2; }
+
+# Removes ee/, webapp/src/ee/, and any backend/*/src/mainEe/ source-set
+# directories. Safe to call repeatedly (--ignore-unmatch), and safe even if
+# nothing needs removing.
+sweep_ee() {
+  git rm -rf --ignore-unmatch -- "${EE_PATHS[@]}" >/dev/null
+  local mainee_dirs=()
+  mapfile -t mainee_dirs < <(find . -type d -name mainEe -not -path './.git/*' 2>/dev/null)
+  if [ "${#mainee_dirs[@]}" -gt 0 ]; then
+    git rm -rf --ignore-unmatch -- "${mainee_dirs[@]}" >/dev/null
+  fi
+}
+
+# Only "UU"/"AA"-type conflicts get literal <<<<<<< markers in the file.
+# Modify/delete and rename/delete conflicts ("DU"/"UD"/"AU"/"UA") leave
+# whichever side's content happens to still exist on disk, with NO markers -
+# `git add` on those silently accepts that content as the resolution. This
+# describes what actually happened so the commit message/output aren't
+# misleading about which files were merely "left as-is" vs genuinely merged.
+describe_conflict_code() {
+  case "$1" in
+    UU|AA) echo "content conflict, file contains <<<<<<< markers - needs manual merge" ;;
+    DU) echo "deleted on this branch, modified upstream - upstream's version was left in place (your deletion was undone); confirm whether to remove it again" ;;
+    UD) echo "modified on this branch, deleted upstream - confirm whether upstream's deletion should be honored" ;;
+    AU|UA) echo "added on both sides (often a rename) - no markers inserted, check the file's current content directly" ;;
+    *) echo "unrecognized conflict type ($1) - inspect with 'git status'" ;;
+  esac
+}
 
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
@@ -104,31 +136,37 @@ if ! $CONTINUE; then
     # -------------------------------------------------------------------
     mapfile -t conflicted < <(git diff --name-only --diff-filter=U)
 
+    declare -A conflict_status=()
+    while IFS= read -r line; do
+      conflict_status["${line:3}"]="${line:0:2}"
+    done < <(git status --porcelain=v1 | grep -E '^(UU|AA|DD|AU|UA|DU|UD) ')
+
     ee_conflicts=()
     other_conflicts=()
     for f in "${conflicted[@]}"; do
       case "$f" in
-        ee/*|webapp/src/ee/*) ee_conflicts+=("$f") ;;
+        ee/*|webapp/src/ee/*|*/src/mainEe/*) ee_conflicts+=("$f") ;;
         *) other_conflicts+=("$f") ;;
       esac
     done
 
     if [ "${#ee_conflicts[@]}" -gt 0 ]; then
-      log "Auto-resolving ${#ee_conflicts[@]} conflict(s) under ee/ or webapp/src/ee/ by deletion..."
+      log "Auto-resolving ${#ee_conflicts[@]} conflict(s) under ee/, webapp/src/ee/, or a mainEe source set by deletion..."
       git rm -rf -- "${ee_conflicts[@]}" >/dev/null
     fi
 
     # Sweep for any ee content that merged in cleanly (no conflict) too.
-    git rm -rf --ignore-unmatch -- "${EE_PATHS[@]}" >/dev/null
+    sweep_ee
 
     if [ "${#other_conflicts[@]}" -gt 0 ]; then
       log "Committing merge with ${#other_conflicts[@]} unresolved conflict(s) outside ee/ paths..."
       {
         echo "Merge upstream/main into $WORK_BRANCH (UNRESOLVED CONFLICTS)"
         echo
-        echo "The following files still contain conflict markers and need manual resolution:"
+        echo "The following files need manual review before this is a real merge:"
         for f in "${other_conflicts[@]}"; do
-          echo "  - $f"
+          code="${conflict_status[$f]:-??}"
+          echo "  - $f [$code: $(describe_conflict_code "$code")]"
         done
         echo
         echo "After fixing them: git add <files>, git commit, then re-run"
@@ -143,9 +181,10 @@ if ! $CONTINUE; then
         git push --force "$ORIGIN_REMOTE" "$WORK_BRANCH" || err "Failed to push $WORK_BRANCH (continuing to report locally)."
       fi
 
-      err "Merge stopped: ${#other_conflicts[@]} file(s) outside ee/ need manual resolution:"
+      err "Merge stopped: ${#other_conflicts[@]} file(s) outside ee/ need manual review:"
       for f in "${other_conflicts[@]}"; do
-        echo "  - $f" >&2
+        code="${conflict_status[$f]:-??}"
+        echo "  - $f [$code: $(describe_conflict_code "$code")]" >&2
       done
       err "Fix them on '$WORK_BRANCH', commit, then re-run: .github/merge_upstream.sh --continue"
       exit 1
@@ -155,7 +194,7 @@ if ! $CONTINUE; then
     git commit --no-edit
   else
     # Merge succeeded outright; still sweep for cleanly-added ee content.
-    git rm -rf --ignore-unmatch -- "${EE_PATHS[@]}" >/dev/null
+    sweep_ee
     if [ -n "$(git status --porcelain)" ]; then
       git commit --amend --no-edit
     fi
@@ -164,7 +203,7 @@ else
   # Resuming: re-sweep in case the manual fix-up commit reintroduced ee
   # content (e.g. by re-adding a file while resolving an unrelated conflict).
   # Harmless no-op if there's nothing left to remove.
-  git rm -rf --ignore-unmatch -- "${EE_PATHS[@]}" >/dev/null
+  sweep_ee
   if [ -n "$(git status --porcelain)" ]; then
     git commit --amend --no-edit
   fi
