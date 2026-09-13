@@ -18,6 +18,13 @@ permissions:
 jobs:
   merge:
     runs-on: ubuntu-24.04
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # gh's repo auto-detection prefers a remote literally named "upstream"
+      # over "origin" - merge_upstream.sh adds one pointing at
+      # tolgee/tolgee-platform, which would otherwise make every bare `gh`
+      # call below target the upstream org instead of this fork.
+      GH_REPO: ${{ github.repository }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,6 +48,7 @@ jobs:
         working-directory: ./webapp
 
       - name: Run merge script
+        id: merge
         run: |
           ARGS=()
           if [ "${{ inputs.skip_build_check }}" = "true" ]; then
@@ -49,15 +57,11 @@ jobs:
           .github/merge_upstream.sh "${ARGS[@]}"
 
       - name: Trigger release
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: success() && steps.merge.outputs.has_changes == 'true'
         run: gh workflow run release.yml --ref feature/no_ee
 
       - name: File/update tracking issue on failure
         if: failure()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           BODY=$(git log -1 --format=%B 2>/dev/null || echo "See workflow run for details.")
           RUN_URL="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"

@@ -258,6 +258,16 @@ git branch -d "$WORK_BRANCH"
 log "Merged commits:"
 git log --oneline "$target_before..$TARGET_BRANCH" || true
 
+if [ "$target_before" = "$(git rev-parse "$TARGET_BRANCH")" ]; then
+  log "No upstream changes merged; nothing new to release."
+  has_changes=false
+else
+  has_changes=true
+fi
+if [ -n "${GITHUB_OUTPUT:-}" ]; then
+  echo "has_changes=$has_changes" >> "$GITHUB_OUTPUT"
+fi
+
 if $DRY_RUN; then
   log "[dry-run] Would push $TARGET_BRANCH and tags to $ORIGIN_REMOTE now."
   exit 0
