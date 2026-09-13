@@ -11,6 +11,11 @@ on:
 jobs:
   main:
     runs-on: ubuntu-24.04
+    env:
+      # `secrets` can't be referenced directly in step `if:` conditions
+      # ("Unrecognized named-value: 'secrets'") - surface it as a job-level
+      # env var instead so the Snyk steps below can check env.SNYK_TOKEN.
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -50,16 +55,14 @@ jobs:
           DOCKER_IMAGE: ${{ vars.DOCKER_IMAGE }}
 
       - name: Install Snyk CLI
-        if: ${{ steps.version.outputs.VERSION != '' && secrets.SNYK_TOKEN != '' }}
+        if: ${{ steps.version.outputs.VERSION != '' && env.SNYK_TOKEN != '' }}
         continue-on-error: true
         run: npm i -g snyk@1.1307.0
 
       - name: Refresh Snyk container snapshot
-        if: ${{ steps.version.outputs.VERSION != '' && secrets.SNYK_TOKEN != '' }}
+        if: ${{ steps.version.outputs.VERSION != '' && env.SNYK_TOKEN != '' }}
         continue-on-error: true
         run: snyk container monitor ${{ vars.DOCKER_IMAGE }}:latest --org=jancizmar
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Pack with webapp
         run: ./gradlew packResources
