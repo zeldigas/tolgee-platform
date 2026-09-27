@@ -6,6 +6,7 @@
 #
 # Usage:
 #   .github/merge_upstream.sh [--continue] [--skip-build-check] [--no-push] [--dry-run]
+#                              [--protect-workflows] [--no-protect-workflows]
 
 set -euo pipefail
 
@@ -25,6 +26,7 @@ CONTINUE=false
 SKIP_BUILD_CHECK=false
 NO_PUSH=false
 DRY_RUN=false
+PROTECT_WORKFLOWS_ARG=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -32,12 +34,27 @@ for arg in "$@"; do
     --skip-build-check) SKIP_BUILD_CHECK=true ;;
     --no-push) NO_PUSH=true ;;
     --dry-run) DRY_RUN=true; NO_PUSH=true ;;
+    --protect-workflows) PROTECT_WORKFLOWS_ARG=true ;;
+    --no-protect-workflows) PROTECT_WORKFLOWS_ARG=false ;;
     *)
       echo "ERROR: unknown argument '$arg'" >&2
       exit 1
       ;;
   esac
 done
+
+# GITHUB_TOKEN (the only credential available inside a GitHub Actions run)
+# can never push changes to .github/workflows/, so that push-safety guard
+# only needs to be on there; a local run uses the operator's own push
+# credentials and can merge workflow-file changes normally, so it's off by
+# default. GITHUB_ACTIONS=true is set automatically by every Actions runner.
+if [ -n "$PROTECT_WORKFLOWS_ARG" ]; then
+  PROTECT_WORKFLOWS=$PROTECT_WORKFLOWS_ARG
+elif [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+  PROTECT_WORKFLOWS=true
+else
+  PROTECT_WORKFLOWS=false
+fi
 
 log() { echo "==> $*"; }
 err() { echo "ERROR: $*" >&2; }
@@ -51,6 +68,36 @@ sweep_ee() {
   mapfile -t mainee_dirs < <(find . -type d -name mainEe -not -path './.git/*' 2>/dev/null)
   if [ "${#mainee_dirs[@]}" -gt 0 ]; then
     git rm -rf --ignore-unmatch -- "${mainee_dirs[@]}" >/dev/null
+  fi
+}
+
+# GITHUB_TOKEN can never create or update files under .github/workflows/ -
+# GitHub hard-blocks that on the default token regardless of what's granted
+# in the workflow's `permissions:` block (there is no permission that lifts
+# it), so any push whose diff touches a workflow file is rejected outright.
+# Only relevant when $PROTECT_WORKFLOWS is on (i.e. running as GITHUB_TOKEN
+# in Actions). Reset workflow files back to whatever's already on
+# $TARGET_BRANCH - discarding upstream's changes there, conflicted or not -
+# so the automated push keeps working, and remember what got left behind so
+# it can be synced manually (locally, with a real credential) afterwards.
+SWEPT_WORKFLOW_FILES=()
+sweep_workflows() {
+  if ! $PROTECT_WORKFLOWS; then
+    return 0
+  fi
+  local f diffs=()
+  mapfile -t diffs < <(git diff --name-only "$TARGET_BRANCH" -- .github/workflows)
+  for f in "${diffs[@]}"; do
+    if git cat-file -e "$TARGET_BRANCH:$f" 2>/dev/null; then
+      git checkout "$TARGET_BRANCH" -- "$f"
+    else
+      git rm -f --ignore-unmatch -- "$f" >/dev/null
+    fi
+    git add -- "$f" 2>/dev/null || true
+    SWEPT_WORKFLOW_FILES+=("$f")
+  done
+  if [ "${#diffs[@]}" -gt 0 ]; then
+    log "Reset ${#diffs[@]} workflow file(s) to $TARGET_BRANCH's version (GITHUB_TOKEN can't push workflow-file changes): ${diffs[*]}"
   fi
 }
 
@@ -146,6 +193,13 @@ if ! $CONTINUE; then
     for f in "${conflicted[@]}"; do
       case "$f" in
         ee/*|webapp/src/ee/*|*/src/mainEe/*) ee_conflicts+=("$f") ;;
+        .github/workflows/*)
+          if $PROTECT_WORKFLOWS; then
+            : # resolved by sweep_workflows below
+          else
+            other_conflicts+=("$f")
+          fi
+          ;;
         *) other_conflicts+=("$f") ;;
       esac
     done
@@ -157,6 +211,9 @@ if ! $CONTINUE; then
 
     # Sweep for any ee content that merged in cleanly (no conflict) too.
     sweep_ee
+    # Same for workflow files - resolves any workflows/ conflicts (and any
+    # clean-merged workflow changes) back to $TARGET_BRANCH's version.
+    sweep_workflows
 
     if [ "${#other_conflicts[@]}" -gt 0 ]; then
       log "Committing merge with ${#other_conflicts[@]} unresolved conflict(s) outside ee/ paths..."
@@ -190,20 +247,24 @@ if ! $CONTINUE; then
       exit 1
     fi
 
-    log "All conflicts were confined to ee/ paths and are resolved. Finishing merge commit..."
+    log "All conflicts were confined to ee/ or workflow paths and are resolved. Finishing merge commit..."
     git commit --no-edit
   else
-    # Merge succeeded outright; still sweep for cleanly-added ee content.
+    # Merge succeeded outright; still sweep for cleanly-added ee content and
+    # any clean (non-conflicting) workflow-file changes.
     sweep_ee
+    sweep_workflows
     if [ -n "$(git status --porcelain)" ]; then
       git commit --amend --no-edit
     fi
   fi
 else
   # Resuming: re-sweep in case the manual fix-up commit reintroduced ee
-  # content (e.g. by re-adding a file while resolving an unrelated conflict).
-  # Harmless no-op if there's nothing left to remove.
+  # content or workflow-file changes (e.g. by re-adding a file while
+  # resolving an unrelated conflict). Harmless no-op if there's nothing left
+  # to remove.
   sweep_ee
+  sweep_workflows
   if [ -n "$(git status --porcelain)" ]; then
     git commit --amend --no-edit
   fi
@@ -266,6 +327,30 @@ else
 fi
 if [ -n "${GITHUB_OUTPUT:-}" ]; then
   echo "has_changes=$has_changes" >> "$GITHUB_OUTPUT"
+fi
+
+if [ "${#SWEPT_WORKFLOW_FILES[@]}" -gt 0 ]; then
+  mapfile -t swept_unique < <(printf '%s\n' "${SWEPT_WORKFLOW_FILES[@]}" | sort -u)
+  log "NOTE: ${#swept_unique[@]} workflow file(s) differ from upstream but were left unchanged (GITHUB_TOKEN can't push workflow-file edits):"
+  for f in "${swept_unique[@]}"; do
+    echo "  - $f"
+  done
+  log "Review/apply upstream's changes to these manually and push with your own credentials, e.g.:"
+  log "  git diff $TARGET_BRANCH $UPSTREAM_REMOTE/$UPSTREAM_BRANCH -- ${swept_unique[*]}"
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    {
+      echo "### Workflow files not auto-synced"
+      echo "\`GITHUB_TOKEN\` can't push changes under \`.github/workflows/\`, so these were left as-is:"
+      for f in "${swept_unique[@]}"; do
+        echo "- \`$f\`"
+      done
+      echo
+      echo "Review upstream's version and apply manually if needed:"
+      echo '```'
+      echo "git diff $TARGET_BRANCH $UPSTREAM_REMOTE/$UPSTREAM_BRANCH -- ${swept_unique[*]}"
+      echo '```'
+    } >> "$GITHUB_STEP_SUMMARY"
+  fi
 fi
 
 if $DRY_RUN; then
