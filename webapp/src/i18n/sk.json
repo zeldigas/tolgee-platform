@@ -12,7 +12,7 @@
   "activity_entity_api_key.description": "Popis",
   "activity_entity_api_key.expires_at": "Platnosť do",
   "activity_entity_api_key.scopes": "Rozsahy",
-  "invoice_usage_dialog_word_tier_upgrade_note": "Používanie presahuje aktuálny limit slov, preto je predplatné cenené podľa úrovne s {words} slovami, na ktorú sa presunie dňa {date}.",
+  "billing_pending_word_tier_upgrade_alert": "Váš plán sa zmení na <b>{plan}</b> dňa {date} za {price}/{period, select, MONTHLY {mesiac} other {rok}}.",
   "oauth2_consent_deselect_all": "Zrušiť výber všetkých",
   "oauth2_consent_local_app_notice": "Prístup bude odovzdaný aplikácii bežiacej na tomto počítači. Pokračujte len v prípade, že ste ju práve sami spustili.",
   "oauth2_consent_scope_all": "Všetky povolenia",

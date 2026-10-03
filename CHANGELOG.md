@@ -1,3 +1,24 @@
+## [3.224.11](https://github.com/tolgee/tolgee-platform/compare/v3.224.10...v3.224.11) (2026-10-01)
+
+
+### Bug Fixes
+
+* stop dropping characters typed into the key name and JSON editors ([#3948](https://github.com/tolgee/tolgee-platform/issues/3948)) ([15aa9d5](https://github.com/tolgee/tolgee-platform/commit/15aa9d544210cc5cedc213eeec882be213e1657d)), closes [#3892](https://github.com/tolgee/tolgee-platform/issues/3892)
+
+## [3.224.10](https://github.com/tolgee/tolgee-platform/compare/v3.224.9...v3.224.10) (2026-09-30)
+
+
+### Bug Fixes
+
+* bump netty to 4.2.18 to patch Snyk-reported vulnerabilities ([#3954](https://github.com/tolgee/tolgee-platform/issues/3954)) ([db26f1e](https://github.com/tolgee/tolgee-platform/commit/db26f1ee6a9697072ee3f3a2fa4287e31aaa4fb7))
+
+## [3.224.9](https://github.com/tolgee/tolgee-platform/compare/v3.224.8...v3.224.9) (2026-09-28)
+
+
+### Bug Fixes
+
+* deterministic tiebreak for equal translation memory matches ([#3920](https://github.com/tolgee/tolgee-platform/issues/3920)) ([8c6e11d](https://github.com/tolgee/tolgee-platform/commit/8c6e11d68345b83d5a7d514ab1ed646f8002ce7e)), closes [#3913](https://github.com/tolgee/tolgee-platform/issues/3913)
+
 ## [3.224.8](https://github.com/tolgee/tolgee-platform/compare/v3.224.7...v3.224.8) (2026-09-25)
 
 
