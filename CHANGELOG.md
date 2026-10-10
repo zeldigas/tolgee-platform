@@ -1,3 +1,71 @@
+# [3.230.0](https://github.com/tolgee/tolgee-platform/compare/v3.229.0...v3.230.0) (2026-10-09)
+
+
+### Features
+
+* OAuth 2.1 for MCP clients — audience binding, client ID metadata documents and SSRF hardening ([#3944](https://github.com/tolgee/tolgee-platform/issues/3944)) ([bd3d71e](https://github.com/tolgee/tolgee-platform/commit/bd3d71e98d2c1e77d737fac501d36bab65f9a30f)), closes [tolgee/tolgee-platform#3907](https://github.com/tolgee/tolgee-platform/issues/3907) [tolgee/tolgee-cli#210](https://github.com/tolgee/tolgee-cli/issues/210)
+
+# [3.229.0](https://github.com/tolgee/tolgee-platform/compare/v3.228.0...v3.229.0) (2026-10-09)
+
+
+### Features
+
+* allow uploading content delivery files as public-read to S3 storages ([#3962](https://github.com/tolgee/tolgee-platform/issues/3962)) ([ec2c285](https://github.com/tolgee/tolgee-platform/commit/ec2c285e40d44cee86fb775b5be5cbac1a5276df))
+
+# [3.228.0](https://github.com/tolgee/tolgee-platform/compare/v3.227.0...v3.228.0) (2026-10-09)
+
+
+### Features
+
+* ask self-hosted admins for a G2 review on startup ([#3971](https://github.com/tolgee/tolgee-platform/issues/3971)) ([3772e92](https://github.com/tolgee/tolgee-platform/commit/3772e92bf74b85d55a9acd38d392852dfb9fc4ad))
+
+# [3.227.0](https://github.com/tolgee/tolgee-platform/compare/v3.226.3...v3.227.0) (2026-10-09)
+
+
+### Features
+
+* suggestions in the in-context dialog for community members (pitch tolgee/tolgee-platform[#3780](https://github.com/tolgee/tolgee-platform/issues/3780)) ([#3930](https://github.com/tolgee/tolgee-platform/issues/3930)) ([1e04181](https://github.com/tolgee/tolgee-platform/commit/1e04181f7e475c393216fd02d0344f2d28b76ad9)), closes [tolgee/tolgee-platform#3937](https://github.com/tolgee/tolgee-platform/issues/3937) [tolgee/tolgee-js#3539](https://github.com/tolgee/tolgee-js/issues/3539) [tolgee/chrome-plugin#44](https://github.com/tolgee/chrome-plugin/issues/44) [tolgee/documentation#1144](https://github.com/tolgee/documentation/issues/1144)
+
+## [3.226.3](https://github.com/tolgee/tolgee-platform/compare/v3.226.2...v3.226.3) (2026-10-07)
+
+
+### Bug Fixes
+
+* reject requests on rate limit bucket contention instead of queueing threads ([#3908](https://github.com/tolgee/tolgee-platform/issues/3908)) ([391d5c2](https://github.com/tolgee/tolgee-platform/commit/391d5c258b1906d21b62e83e17b40428870b6f65))
+
+## [3.226.2](https://github.com/tolgee/tolgee-platform/compare/v3.226.1...v3.226.2) (2026-10-06)
+
+
+### Bug Fixes
+
+* reject deleted languages when setting permissions ([#3958](https://github.com/tolgee/tolgee-platform/issues/3958)) ([c00200f](https://github.com/tolgee/tolgee-platform/commit/c00200f727d14cff0dc1b7938c1896dfdf4f788f)), closes [#3765](https://github.com/tolgee/tolgee-platform/issues/3765)
+
+## [3.226.1](https://github.com/tolgee/tolgee-platform/compare/v3.226.0...v3.226.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* config properties that fail startup when set ([#3965](https://github.com/tolgee/tolgee-platform/issues/3965)) ([4fd4046](https://github.com/tolgee/tolgee-platform/commit/4fd4046d40b1579c91065856fdf103abe11f8c4f))
+
+# [3.226.0](https://github.com/tolgee/tolgee-platform/compare/v3.225.0...v3.226.0) (2026-10-05)
+
+
+### Features
+
+* show a top banner when the organization reaches its plan limit ([#3898](https://github.com/tolgee/tolgee-platform/issues/3898)) ([ce04342](https://github.com/tolgee/tolgee-platform/commit/ce04342dd2cfb6c969a8cb68c9828b20a98336f1)), closes [#3142](https://github.com/tolgee/tolgee-platform/issues/3142) [tolgee/billing#310](https://github.com/tolgee/billing/issues/310)
+
+# [3.225.0](https://github.com/tolgee/tolgee-platform/compare/v3.224.11...v3.225.0) (2026-10-05)
+
+
+### Bug Fixes
+
+* upgrade embedded Tomcat to 11.0.26 ([#3960](https://github.com/tolgee/tolgee-platform/issues/3960)) ([877ff57](https://github.com/tolgee/tolgee-platform/commit/877ff5746dd3d7f2f09d827bc226aaa36a7361be))
+
+
+### Features
+
+* add Figma plugin new version announcement banner ([#3963](https://github.com/tolgee/tolgee-platform/issues/3963)) ([95b0f1c](https://github.com/tolgee/tolgee-platform/commit/95b0f1c6c2e3bb53a4ff7abfcd0bace077871afb))
+
 ## [3.224.11](https://github.com/tolgee/tolgee-platform/compare/v3.224.10...v3.224.11) (2026-10-01)
 
 
