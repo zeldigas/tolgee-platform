@@ -1284,6 +1284,12 @@ export interface paths {
   "/v2/user-preferences": {
     get: operations["get_18"];
   };
+  "/v2/user-preferences/project-storage/{projectId}/{fieldName}": {
+    /** Returns a field the current user stored for the given project, e.g. the last used export settings. Data is `null` when the field is not set. Requires any access to the project. */
+    get: operations["getProjectStorageField"];
+    /** Stores any JSON value under the field for the current user and the given project. Sending `null` removes the field. Other fields and other projects are left untouched. Field name must match `[A-Za-z0-9_.-]{1,64}`, the serialized value must not exceed 16 KB and a project can hold at most 50 fields. Requires any access to the project. */
+    put: operations["setProjectStorageField"];
+  };
   "/v2/user-preferences/set-language/{languageTag}": {
     put: operations["setLanguage"];
   };
@@ -3020,6 +3026,7 @@ export interface components {
         | "request_validation_error"
         | "filter_by_value_state_not_valid"
         | "filter_by_value_qa_check_type_not_valid"
+        | "filter_by_value_task_not_valid"
         | "filter_pattern_not_valid"
         | "filter_pattern_language_not_valid"
         | "import_has_expired"
@@ -3135,6 +3142,7 @@ export interface components {
         | "content_storage_test_failed"
         | "content_storage_config_invalid"
         | "invalid_connection_string"
+        | "invalid_onboarding_answer"
         | "cannot_create_azure_storage_client"
         | "s3_access_key_required"
         | "azure_connection_string_required"
@@ -3247,6 +3255,7 @@ export interface components {
         | "cannot_update_without_modification"
         | "plan_is_not_a_downgrade"
         | "cannot_downgrade_word_tier"
+        | "plan_tier_below_current_words"
         | "current_subscription_is_not_trialing"
         | "sorting_and_paging_is_not_supported_when_using_cursor"
         | "strings_metric_are_not_supported"
@@ -3330,7 +3339,10 @@ export interface components {
         | "project_import_corrupt_archive"
         | "server_busy"
         | "cannot_delete_initial_user"
-        | "suggestions_disabled";
+        | "suggestions_disabled"
+        | "project_storage_invalid_field_name"
+        | "project_storage_value_too_large"
+        | "project_storage_too_many_fields";
       params?: { [key: string]: unknown }[];
     };
     ExistenceEntityDescription: {
@@ -3876,6 +3888,8 @@ export interface components {
       eeSubscription?: components["schemas"]["InitialDataEeSubscriptionModel"];
       hasCommunityContributions: boolean;
       languageTag?: string;
+      /** @enum {string} */
+      onboardingSurveyVersion?: "default_v1" | "invited_v1";
       preferredOrganization?: components["schemas"]["PrivateOrganizationModel"];
       qaCheckCategories?: components["schemas"]["QaCheckCategoryModel"][];
       serverConfiguration: components["schemas"]["PublicConfigurationDTO"];
@@ -5984,7 +5998,6 @@ export interface components {
       /** Format: int32 */
       translationsViewLanguagesLimit: number;
       userCanCreateOrganizations: boolean;
-      userSourceField: boolean;
       version: string;
     };
     PublicInvitationModel: {
@@ -6667,8 +6680,6 @@ export interface components {
       organizationName?: string;
       password: string;
       recaptchaToken?: string;
-      /** @description Where did the user find us? */
-      userSource?: string;
     };
     SimpleGlossaryModel: {
       /**
@@ -7018,6 +7029,7 @@ export interface components {
         | "request_validation_error"
         | "filter_by_value_state_not_valid"
         | "filter_by_value_qa_check_type_not_valid"
+        | "filter_by_value_task_not_valid"
         | "filter_pattern_not_valid"
         | "filter_pattern_language_not_valid"
         | "import_has_expired"
@@ -7133,6 +7145,7 @@ export interface components {
         | "content_storage_test_failed"
         | "content_storage_config_invalid"
         | "invalid_connection_string"
+        | "invalid_onboarding_answer"
         | "cannot_create_azure_storage_client"
         | "s3_access_key_required"
         | "azure_connection_string_required"
@@ -7245,6 +7258,7 @@ export interface components {
         | "cannot_update_without_modification"
         | "plan_is_not_a_downgrade"
         | "cannot_downgrade_word_tier"
+        | "plan_tier_below_current_words"
         | "current_subscription_is_not_trialing"
         | "sorting_and_paging_is_not_supported_when_using_cursor"
         | "strings_metric_are_not_supported"
@@ -7328,7 +7342,10 @@ export interface components {
         | "project_import_corrupt_archive"
         | "server_busy"
         | "cannot_delete_initial_user"
-        | "suggestions_disabled";
+        | "suggestions_disabled"
+        | "project_storage_invalid_field_name"
+        | "project_storage_value_too_large"
+        | "project_storage_too_many_fields";
       params?: { [key: string]: unknown }[];
       success: boolean;
     };
@@ -19853,6 +19870,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -20006,6 +20027,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -20124,6 +20147,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -20277,6 +20304,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -20439,6 +20468,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -20592,6 +20625,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -25281,6 +25316,12 @@ export interface operations {
         )[];
         /** Include keys where translation is outdated */
         filterOutdated?: boolean;
+        /** Filter by task membership, as `taskType,status` — e.g. `TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Evaluated against the task language, so a key already tasked for one language is still included for the others. Conditions on different task types are combined with AND. */
+        filterTaskInStatus?: string[];
+        /** Include only keys that have an active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not pull the key into the others. */
+        filterHasSuggestions?: boolean;
+        /** Include only keys that have no active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not drop the key from the others. */
+        filterHasNoSuggestions?: boolean;
       };
       path: {
         projectId: number;
@@ -25344,6 +25385,12 @@ export interface operations {
         )[];
         /** Include keys where translation is outdated */
         filterOutdated?: boolean;
+        /** Filter by task membership, as `taskType,status` — e.g. `TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Evaluated against the task language, so a key already tasked for one language is still included for the others. Conditions on different task types are combined with AND. */
+        filterTaskInStatus?: string[];
+        /** Include only keys that have an active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not pull the key into the others. */
+        filterHasSuggestions?: boolean;
+        /** Include only keys that have no active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not drop the key from the others. */
+        filterHasNoSuggestions?: boolean;
       };
       path: {
         projectId: number;
@@ -25407,6 +25454,12 @@ export interface operations {
         )[];
         /** Include keys where translation is outdated */
         filterOutdated?: boolean;
+        /** Filter by task membership, as `taskType,status` — e.g. `TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Evaluated against the task language, so a key already tasked for one language is still included for the others. Conditions on different task types are combined with AND. */
+        filterTaskInStatus?: string[];
+        /** Include only keys that have an active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not pull the key into the others. */
+        filterHasSuggestions?: boolean;
+        /** Include only keys that have no active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not drop the key from the others. */
+        filterHasNoSuggestions?: boolean;
       };
       path: {
         projectId: number;
@@ -26501,6 +26554,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -26654,6 +26711,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -26984,6 +27043,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -27137,6 +27200,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -29995,6 +30060,105 @@ export interface operations {
             | components["schemas"]["ErrorResponseTyped"]
             | components["schemas"]["ErrorResponseBody"];
         };
+      };
+    };
+  };
+  /** Returns a field the current user stored for the given project, e.g. the last used export settings. Data is `null` when the field is not set. Requires any access to the project. */
+  getProjectStorageField: {
+    parameters: {
+      path: {
+        projectId: number;
+        fieldName: string;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["UserStorageResponse"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  /** Stores any JSON value under the field for the current user and the given project. Sending `null` removes the field. Other fields and other projects are left untouched. Field name must match `[A-Za-z0-9_.-]{1,64}`, the serialized value must not exceed 16 KB and a project can hold at most 50 fields. Requires any access to the project. */
+  setProjectStorageField: {
+    parameters: {
+      path: {
+        projectId: number;
+        fieldName: string;
+      };
+    };
+    responses: {
+      /** OK */
+      200: unknown;
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": { [key: string]: unknown };
       };
     };
   };

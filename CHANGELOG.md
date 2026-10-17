@@ -1,3 +1,66 @@
+## [3.236.1](https://github.com/tolgee/tolgee-platform/compare/v3.236.0...v3.236.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* stop batch operation dialog hanging on "Finalizing…" ([#3959](https://github.com/tolgee/tolgee-platform/issues/3959)) ([ae52e5c](https://github.com/tolgee/tolgee-platform/commit/ae52e5c21f5b63fa8911fde3d35d6fa799811ce4)), closes [#3948](https://github.com/tolgee/tolgee-platform/issues/3948) [#3892](https://github.com/tolgee/tolgee-platform/issues/3892)
+
+# [3.236.0](https://github.com/tolgee/tolgee-platform/compare/v3.235.0...v3.236.0) (2026-10-15)
+
+
+### Features
+
+* add an error for picking a plan tier below the organization's word count ([#3968](https://github.com/tolgee/tolgee-platform/issues/3968)) ([f5f2948](https://github.com/tolgee/tolgee-platform/commit/f5f294880bbd01cabac9c8ad7dde186f043aceb0))
+
+# [3.235.0](https://github.com/tolgee/tolgee-platform/compare/v3.234.2...v3.235.0) (2026-10-15)
+
+
+### Features
+
+* add language-scoped filter for translations never included in a task ([#3871](https://github.com/tolgee/tolgee-platform/issues/3871)) ([abfab54](https://github.com/tolgee/tolgee-platform/commit/abfab5441451fc9f9f052728cffb40a513e64272)), closes [#3848](https://github.com/tolgee/tolgee-platform/issues/3848) [tolgee/billing#299](https://github.com/tolgee/billing/issues/299)
+
+## [3.234.2](https://github.com/tolgee/tolgee-platform/compare/v3.234.1...v3.234.2) (2026-10-14)
+
+
+### Performance Improvements
+
+* index exact-text translation memory lookups ([#3974](https://github.com/tolgee/tolgee-platform/issues/3974)) ([14f08c7](https://github.com/tolgee/tolgee-platform/commit/14f08c7bbb9b3992cbd5839a0384018c09504ba2))
+
+## [3.234.1](https://github.com/tolgee/tolgee-platform/compare/v3.234.0...v3.234.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* stop the log flood from batch translation jobs that hit a plan or credit limit ([#3969](https://github.com/tolgee/tolgee-platform/issues/3969)) ([fed205a](https://github.com/tolgee/tolgee-platform/commit/fed205ad23004b826ab7a544ee35c446a2205553)), closes [#3642](https://github.com/tolgee/tolgee-platform/issues/3642)
+
+# [3.234.0](https://github.com/tolgee/tolgee-platform/compare/v3.233.0...v3.234.0) (2026-10-13)
+
+
+### Features
+
+* platform support for the post-signup onboarding survey ([#3909](https://github.com/tolgee/tolgee-platform/issues/3909)) ([04cafed](https://github.com/tolgee/tolgee-platform/commit/04cafed778130966180918c39a4c2a6fe6f83c80)), closes [tolgee/billing#314](https://github.com/tolgee/billing/issues/314)
+
+# [3.233.0](https://github.com/tolgee/tolgee-platform/compare/v3.232.0...v3.233.0) (2026-10-13)
+
+
+### Features
+
+* export page redesign with tag filters and remembered export setup ([#3973](https://github.com/tolgee/tolgee-platform/issues/3973)) ([90188bc](https://github.com/tolgee/tolgee-platform/commit/90188bcd1806780f7c9c0c3a19bf123a27cbc8ac))
+
+# [3.232.0](https://github.com/tolgee/tolgee-platform/compare/v3.231.0...v3.232.0) (2026-10-13)
+
+
+### Features
+
+* show a top banner when the subscription payment failed ([#3967](https://github.com/tolgee/tolgee-platform/issues/3967)) ([66520a8](https://github.com/tolgee/tolgee-platform/commit/66520a8b01ddef36978bda4a710912932a140185))
+
+# [3.231.0](https://github.com/tolgee/tolgee-platform/compare/v3.230.0...v3.231.0) (2026-10-13)
+
+
+### Features
+
+* add filter by key pluralization to translations view ([#3972](https://github.com/tolgee/tolgee-platform/issues/3972)) ([1ca5b49](https://github.com/tolgee/tolgee-platform/commit/1ca5b493853ae2c9fa7d2cdfadf00f89eed86d23))
+
 # [3.230.0](https://github.com/tolgee/tolgee-platform/compare/v3.229.0...v3.230.0) (2026-10-09)
 
 
