@@ -39,14 +39,6 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/setup-env
 
-      - name: Install library dependencies
-        run: npm ci
-        working-directory: ./library
-
-      - name: Install webapp dependencies
-        run: npm ci
-        working-directory: ./webapp
-
       - name: Run merge script
         id: merge
         run: |

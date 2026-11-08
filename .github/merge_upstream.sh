@@ -275,6 +275,12 @@ fi
 # ---------------------------------------------------------------------------
 
 if ! $SKIP_BUILD_CHECK; then
+  # Upstream may have added/changed npm dependencies, so install from the
+  # merged lockfiles rather than trusting whatever node_modules exists.
+  log "Installing library and webapp npm dependencies..."
+  npm ci --prefix library
+  npm ci --prefix webapp
+
   log "Regenerating webapp ee/oss module symlink..."
   node webapp/scripts/prepareEe.js
 
