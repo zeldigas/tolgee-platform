@@ -790,7 +790,8 @@ export interface paths {
      * Uses enabled auto-translation methods.
      * You need to set at least one of useMachineTranslation or useTranslationMemory to true.
      *
-     * This will replace the the existing translation with the result obtained from specified source!
+     * When languages are specified, their existing translations are replaced with the result obtained from the specified source.
+     * Without languages, only untranslated languages the caller may translate are filled.
      */
     put: operations["autoTranslate"];
   };
@@ -1284,6 +1285,12 @@ export interface paths {
   "/v2/user-preferences": {
     get: operations["get_18"];
   };
+  "/v2/user-preferences/project-storage/{projectId}/{fieldName}": {
+    /** Returns a field the current user stored for the given project, e.g. the last used export settings. Data is `null` when the field is not set. Requires any access to the project. */
+    get: operations["getProjectStorageField"];
+    /** Stores any JSON value under the field for the current user and the given project. Sending `null` removes the field. Other fields and other projects are left untouched. Field name must match `[A-Za-z0-9_.-]{1,64}`, the serialized value must not exceed 16 KB and a project can hold at most 50 fields. Requires any access to the project. */
+    put: operations["setProjectStorageField"];
+  };
   "/v2/user-preferences/set-language/{languageTag}": {
     put: operations["setLanguage"];
   };
@@ -1373,7 +1380,8 @@ export interface components {
         | "FEATURE_BRANCHING"
         | "FEATURE_TRANSLATION_MEMORY_MANAGEMENT"
         | "FEATURE_QA_CHECKS_AND_TRANSLATION_MEMORY"
-        | "FEATURE_FIGMA_PLUGIN_NEW_VERSION";
+        | "FEATURE_FIGMA_PLUGIN_NEW_VERSION"
+        | "FEATURE_COMMUNITY_TRANSLATION";
     };
     ApiKeyModel: {
       /** @description Description */
@@ -3020,6 +3028,7 @@ export interface components {
         | "request_validation_error"
         | "filter_by_value_state_not_valid"
         | "filter_by_value_qa_check_type_not_valid"
+        | "filter_by_value_task_not_valid"
         | "filter_pattern_not_valid"
         | "filter_pattern_language_not_valid"
         | "import_has_expired"
@@ -3047,11 +3056,6 @@ export interface components {
         | "oauth2_token_url_not_set"
         | "oauth2_user_url_not_set"
         | "email_already_invited_or_member"
-        | "price_not_found"
-        | "invoice_not_from_organization"
-        | "invoice_not_found"
-        | "plan_not_found"
-        | "plan_not_available_any_more"
         | "no_auto_translation_method"
         | "cannot_translate_base_language"
         | "pat_not_found"
@@ -3091,12 +3095,6 @@ export interface components {
         | "cannot_set_different_translate_and_state_change_languages_for_level_based_permissions"
         | "cannot_disable_your_own_account"
         | "user_account_disabled"
-        | "subscription_not_found"
-        | "invoice_does_not_have_usage"
-        | "customer_not_found"
-        | "subscription_not_active"
-        | "organization_already_subscribed"
-        | "organization_not_subscribed"
         | "license_key_used_by_another_instance"
         | "translation_spending_limit_exceeded"
         | "credit_spending_limit_exceeded"
@@ -3106,7 +3104,6 @@ export interface components {
         | "mt_service_not_enabled"
         | "project_not_selected"
         | "organization_not_selected"
-        | "plan_has_subscribers"
         | "translation_failed"
         | "batch_job_not_found"
         | "no_translations_to_recheck"
@@ -3146,14 +3143,6 @@ export interface components {
         | "content_storage_is_in_use"
         | "cannot_set_state_for_missing_translation"
         | "no_project_id_provided"
-        | "license_key_not_provided"
-        | "subscription_already_canceled"
-        | "user_is_subscribed_to_paid_plan"
-        | "cannot_create_free_plan_without_fixed_type"
-        | "cannot_modify_plan_free_status"
-        | "plan_invoiced_requires_free"
-        | "plan_incomplete_usd_pricing"
-        | "self_hosted_plan_usd_price_only_for_hosted_words"
         | "key_id_not_provided"
         | "free_self_hosted_seat_limit_exceeded"
         | "advanced_params_not_supported"
@@ -3196,13 +3185,9 @@ export interface components {
         | "slack_workspace_already_connected"
         | "slack_connection_error"
         | "email_verification_code_not_valid"
-        | "cannot_subscribe_to_free_plan"
-        | "plan_auto_assignment_only_for_free_plans"
-        | "plan_auto_assignment_only_for_private_plans"
         | "task_not_found"
         | "task_not_finished"
         | "task_not_open"
-        | "translation_agency_not_found"
         | "this_feature_is_not_implemented_in_oss"
         | "sso_token_exchange_failed"
         | "sso_user_info_retrieval_failed"
@@ -3224,38 +3209,13 @@ export interface components {
         | "sso_domain_not_allowed"
         | "sso_login_forced_for_this_account"
         | "use_sso_for_authentication_instead"
-        | "date_has_to_be_in_the_future"
-        | "custom_plan_and_plan_id_cannot_be_set_together"
-        | "specify_plan_id_or_custom_plan"
-        | "custom_plans_has_to_be_private"
-        | "cannot_create_free_plan_with_prices"
-        | "cannot_create_free_plan_with_multiple_tiers"
-        | "cloud_plan_must_have_at_least_one_tier"
-        | "cloud_plan_must_have_exactly_one_tier"
-        | "cloud_plan_tier_missing_included_words"
-        | "cloud_plan_tier_invalid_allowance_for_metric"
-        | "cloud_plan_tier_missing_eur_price"
-        | "cloud_plan_usd_price_only_for_hosted_words"
         | "organization_currency_already_set"
-        | "plan_not_priced_in_organization_currency"
-        | "plan_tiers_disagree_on_billing_period"
-        | "self_hosted_plan_missing_included_words"
-        | "stripe_product_id_required"
-        | "stripe_product_name_required"
-        | "subscription_not_scheduled_for_cancellation"
-        | "cannot_cancel_trial"
-        | "cannot_update_without_modification"
-        | "plan_is_not_a_downgrade"
-        | "cannot_downgrade_word_tier"
-        | "current_subscription_is_not_trialing"
         | "sorting_and_paging_is_not_supported_when_using_cursor"
-        | "strings_metric_are_not_supported"
         | "plan_key_limit_exceeded"
         | "keys_spending_limit_exceeded"
         | "plan_seat_limit_exceeded"
         | "plan_word_limit_exceeded"
         | "words_spending_limit_exceeded"
-        | "auto_upgrade_cannot_be_disabled_over_limit"
         | "instance_not_using_license_key"
         | "invalid_path"
         | "llm_provider_not_found"
@@ -3265,7 +3225,6 @@ export interface components {
         | "llm_template_parsing_error"
         | "llm_rate_limited"
         | "llm_provider_timeout"
-        | "no_llm_provider_configured"
         | "glossary_not_found"
         | "glossary_term_not_found"
         | "glossary_term_translation_not_found"
@@ -3322,15 +3281,15 @@ export interface components {
         | "translation_exceeds_char_limit"
         | "url_not_valid"
         | "qa_checks_not_enabled"
-        | "plan_migration_not_found"
-        | "plan_has_migrations"
-        | "source_and_target_plan_must_be_different"
         | "project_import_version_mismatch"
         | "project_import_missing_project_json"
         | "project_import_corrupt_archive"
         | "server_busy"
         | "cannot_delete_initial_user"
-        | "suggestions_disabled";
+        | "suggestions_disabled"
+        | "project_storage_invalid_field_name"
+        | "project_storage_value_too_large"
+        | "project_storage_too_many_fields";
       params?: { [key: string]: unknown }[];
     };
     ExistenceEntityDescription: {
@@ -3876,6 +3835,8 @@ export interface components {
       eeSubscription?: components["schemas"]["InitialDataEeSubscriptionModel"];
       hasCommunityContributions: boolean;
       languageTag?: string;
+      /** @enum {string} */
+      onboardingSurveyVersion?: "default_v1" | "invited_v1";
       preferredOrganization?: components["schemas"]["PrivateOrganizationModel"];
       qaCheckCategories?: components["schemas"]["QaCheckCategoryModel"][];
       serverConfiguration: components["schemas"]["PublicConfigurationDTO"];
@@ -5741,6 +5702,8 @@ export interface components {
       /** Format: int64 */
       baseWordsCount: number;
       /** Format: int64 */
+      hostedWordsCount: number;
+      /** Format: int64 */
       keyCount: number;
       /** Format: int32 */
       languageCount: number;
@@ -5984,7 +5947,6 @@ export interface components {
       /** Format: int32 */
       translationsViewLanguagesLimit: number;
       userCanCreateOrganizations: boolean;
-      userSourceField: boolean;
       version: string;
     };
     PublicInvitationModel: {
@@ -6667,8 +6629,6 @@ export interface components {
       organizationName?: string;
       password: string;
       recaptchaToken?: string;
-      /** @description Where did the user find us? */
-      userSource?: string;
     };
     SimpleGlossaryModel: {
       /**
@@ -7018,6 +6978,7 @@ export interface components {
         | "request_validation_error"
         | "filter_by_value_state_not_valid"
         | "filter_by_value_qa_check_type_not_valid"
+        | "filter_by_value_task_not_valid"
         | "filter_pattern_not_valid"
         | "filter_pattern_language_not_valid"
         | "import_has_expired"
@@ -7045,11 +7006,6 @@ export interface components {
         | "oauth2_token_url_not_set"
         | "oauth2_user_url_not_set"
         | "email_already_invited_or_member"
-        | "price_not_found"
-        | "invoice_not_from_organization"
-        | "invoice_not_found"
-        | "plan_not_found"
-        | "plan_not_available_any_more"
         | "no_auto_translation_method"
         | "cannot_translate_base_language"
         | "pat_not_found"
@@ -7089,12 +7045,6 @@ export interface components {
         | "cannot_set_different_translate_and_state_change_languages_for_level_based_permissions"
         | "cannot_disable_your_own_account"
         | "user_account_disabled"
-        | "subscription_not_found"
-        | "invoice_does_not_have_usage"
-        | "customer_not_found"
-        | "subscription_not_active"
-        | "organization_already_subscribed"
-        | "organization_not_subscribed"
         | "license_key_used_by_another_instance"
         | "translation_spending_limit_exceeded"
         | "credit_spending_limit_exceeded"
@@ -7104,7 +7054,6 @@ export interface components {
         | "mt_service_not_enabled"
         | "project_not_selected"
         | "organization_not_selected"
-        | "plan_has_subscribers"
         | "translation_failed"
         | "batch_job_not_found"
         | "no_translations_to_recheck"
@@ -7144,14 +7093,6 @@ export interface components {
         | "content_storage_is_in_use"
         | "cannot_set_state_for_missing_translation"
         | "no_project_id_provided"
-        | "license_key_not_provided"
-        | "subscription_already_canceled"
-        | "user_is_subscribed_to_paid_plan"
-        | "cannot_create_free_plan_without_fixed_type"
-        | "cannot_modify_plan_free_status"
-        | "plan_invoiced_requires_free"
-        | "plan_incomplete_usd_pricing"
-        | "self_hosted_plan_usd_price_only_for_hosted_words"
         | "key_id_not_provided"
         | "free_self_hosted_seat_limit_exceeded"
         | "advanced_params_not_supported"
@@ -7194,13 +7135,9 @@ export interface components {
         | "slack_workspace_already_connected"
         | "slack_connection_error"
         | "email_verification_code_not_valid"
-        | "cannot_subscribe_to_free_plan"
-        | "plan_auto_assignment_only_for_free_plans"
-        | "plan_auto_assignment_only_for_private_plans"
         | "task_not_found"
         | "task_not_finished"
         | "task_not_open"
-        | "translation_agency_not_found"
         | "this_feature_is_not_implemented_in_oss"
         | "sso_token_exchange_failed"
         | "sso_user_info_retrieval_failed"
@@ -7222,38 +7159,13 @@ export interface components {
         | "sso_domain_not_allowed"
         | "sso_login_forced_for_this_account"
         | "use_sso_for_authentication_instead"
-        | "date_has_to_be_in_the_future"
-        | "custom_plan_and_plan_id_cannot_be_set_together"
-        | "specify_plan_id_or_custom_plan"
-        | "custom_plans_has_to_be_private"
-        | "cannot_create_free_plan_with_prices"
-        | "cannot_create_free_plan_with_multiple_tiers"
-        | "cloud_plan_must_have_at_least_one_tier"
-        | "cloud_plan_must_have_exactly_one_tier"
-        | "cloud_plan_tier_missing_included_words"
-        | "cloud_plan_tier_invalid_allowance_for_metric"
-        | "cloud_plan_tier_missing_eur_price"
-        | "cloud_plan_usd_price_only_for_hosted_words"
         | "organization_currency_already_set"
-        | "plan_not_priced_in_organization_currency"
-        | "plan_tiers_disagree_on_billing_period"
-        | "self_hosted_plan_missing_included_words"
-        | "stripe_product_id_required"
-        | "stripe_product_name_required"
-        | "subscription_not_scheduled_for_cancellation"
-        | "cannot_cancel_trial"
-        | "cannot_update_without_modification"
-        | "plan_is_not_a_downgrade"
-        | "cannot_downgrade_word_tier"
-        | "current_subscription_is_not_trialing"
         | "sorting_and_paging_is_not_supported_when_using_cursor"
-        | "strings_metric_are_not_supported"
         | "plan_key_limit_exceeded"
         | "keys_spending_limit_exceeded"
         | "plan_seat_limit_exceeded"
         | "plan_word_limit_exceeded"
         | "words_spending_limit_exceeded"
-        | "auto_upgrade_cannot_be_disabled_over_limit"
         | "instance_not_using_license_key"
         | "invalid_path"
         | "llm_provider_not_found"
@@ -7263,7 +7175,6 @@ export interface components {
         | "llm_template_parsing_error"
         | "llm_rate_limited"
         | "llm_provider_timeout"
-        | "no_llm_provider_configured"
         | "glossary_not_found"
         | "glossary_term_not_found"
         | "glossary_term_translation_not_found"
@@ -7320,15 +7231,15 @@ export interface components {
         | "translation_exceeds_char_limit"
         | "url_not_valid"
         | "qa_checks_not_enabled"
-        | "plan_migration_not_found"
-        | "plan_has_migrations"
-        | "source_and_target_plan_must_be_different"
         | "project_import_version_mismatch"
         | "project_import_missing_project_json"
         | "project_import_corrupt_archive"
         | "server_busy"
         | "cannot_delete_initial_user"
-        | "suggestions_disabled";
+        | "suggestions_disabled"
+        | "project_storage_invalid_field_name"
+        | "project_storage_value_too_large"
+        | "project_storage_too_many_fields";
       params?: { [key: string]: unknown }[];
       success: boolean;
     };
@@ -8057,6 +7968,8 @@ export interface components {
       subscriptionPrice?: number;
       total: number;
       translations: components["schemas"]["AverageProportionalUsageItemModel"];
+      /** @description Relevant for expected usage only. One-time charge for moving a yearly subscription to a higher tier for the rest of its billing year, included in the total. */
+      upgradeProrationTotal?: number;
     };
     UsedNamespaceModel: {
       /**
@@ -19853,6 +19766,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -20006,6 +19923,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -20124,6 +20043,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -20277,6 +20200,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -20439,6 +20364,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -20592,6 +20521,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -21109,7 +21040,8 @@ export interface operations {
    * Uses enabled auto-translation methods.
    * You need to set at least one of useMachineTranslation or useTranslationMemory to true.
    *
-   * This will replace the the existing translation with the result obtained from specified source!
+   * When languages are specified, their existing translations are replaced with the result obtained from the specified source.
+   * Without languages, only untranslated languages the caller may translate are filled.
    */
   autoTranslate: {
     parameters: {
@@ -25281,6 +25213,12 @@ export interface operations {
         )[];
         /** Include keys where translation is outdated */
         filterOutdated?: boolean;
+        /** Filter by task membership, as `taskType,status` — e.g. `TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Evaluated against the task language, so a key already tasked for one language is still included for the others. Conditions on different task types are combined with AND. */
+        filterTaskInStatus?: string[];
+        /** Include only keys that have an active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not pull the key into the others. */
+        filterHasSuggestions?: boolean;
+        /** Include only keys that have no active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not drop the key from the others. */
+        filterHasNoSuggestions?: boolean;
       };
       path: {
         projectId: number;
@@ -25344,6 +25282,12 @@ export interface operations {
         )[];
         /** Include keys where translation is outdated */
         filterOutdated?: boolean;
+        /** Filter by task membership, as `taskType,status` — e.g. `TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Evaluated against the task language, so a key already tasked for one language is still included for the others. Conditions on different task types are combined with AND. */
+        filterTaskInStatus?: string[];
+        /** Include only keys that have an active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not pull the key into the others. */
+        filterHasSuggestions?: boolean;
+        /** Include only keys that have no active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not drop the key from the others. */
+        filterHasNoSuggestions?: boolean;
       };
       path: {
         projectId: number;
@@ -25407,6 +25351,12 @@ export interface operations {
         )[];
         /** Include keys where translation is outdated */
         filterOutdated?: boolean;
+        /** Filter by task membership, as `taskType,status` — e.g. `TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Evaluated against the task language, so a key already tasked for one language is still included for the others. Conditions on different task types are combined with AND. */
+        filterTaskInStatus?: string[];
+        /** Include only keys that have an active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not pull the key into the others. */
+        filterHasSuggestions?: boolean;
+        /** Include only keys that have no active suggestion in the task language. Evaluated per language, so a suggestion in one target language does not drop the key from the others. */
+        filterHasNoSuggestions?: boolean;
       };
       path: {
         projectId: number;
@@ -26501,6 +26451,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -26654,6 +26608,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -26984,6 +26940,10 @@ export interface operations {
         filterHasDescription?: boolean;
         /** Selects only keys without a description */
         filterHasNoDescription?: boolean;
+        /** Selects only plural keys */
+        filterIsPlural?: boolean;
+        /** Selects only non-plural keys */
+        filterIsNotPlural?: boolean;
         /**
          * Selects only keys with provided namespaces.
          *
@@ -27137,6 +27097,8 @@ export interface operations {
         filterTaskKeysNotDone?: boolean;
         /** Filter task keys which are `done` */
         filterTaskKeysDone?: boolean;
+        /** Filter by task membership, as `languageTag,taskType,status` — e.g. `en,TRANSLATE,NEVER_IN_TASK`. Status is one of IN_OPEN_TASK, NOT_IN_OPEN_TASK, HAS_BEEN_IN_TASK, NEVER_IN_TASK; a task counts as open while it is NEW or IN_PROGRESS. Conditions on different task types are combined with AND, so TRANSLATE,HAS_BEEN_IN_TASK together with REVIEW,NEVER_IN_TASK selects keys that were translated but never reviewed. Across languages, IN_OPEN_TASK and HAS_BEEN_IN_TASK match a key tasked in any of the given languages, while NOT_IN_OPEN_TASK and NEVER_IN_TASK require the key to be free in all of them. Does not affect filterTaskNumber. */
+        filterTaskInLang?: string[];
         /** Filter keys with unresolved comments in lang */
         filterHasUnresolvedCommentsInLang?: string[];
         /** Filter keys with any comments in lang */
@@ -29995,6 +29957,105 @@ export interface operations {
             | components["schemas"]["ErrorResponseTyped"]
             | components["schemas"]["ErrorResponseBody"];
         };
+      };
+    };
+  };
+  /** Returns a field the current user stored for the given project, e.g. the last used export settings. Data is `null` when the field is not set. Requires any access to the project. */
+  getProjectStorageField: {
+    parameters: {
+      path: {
+        projectId: number;
+        fieldName: string;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["UserStorageResponse"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  /** Stores any JSON value under the field for the current user and the given project. Sending `null` removes the field. Other fields and other projects are left untouched. Field name must match `[A-Za-z0-9_.-]{1,64}`, the serialized value must not exceed 16 KB and a project can hold at most 50 fields. Requires any access to the project. */
+  setProjectStorageField: {
+    parameters: {
+      path: {
+        projectId: number;
+        fieldName: string;
+      };
+    };
+    responses: {
+      /** OK */
+      200: unknown;
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": { [key: string]: unknown };
       };
     };
   };
