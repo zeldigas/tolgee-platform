@@ -11,7 +11,7 @@ on:
         default: false
 
 permissions:
-  contents: write # push feature/no_ee, upstream-sync, and tags
+  contents: write # push feature/no_ee, upstream-sync, and the release tag
   actions: write # gh workflow run release.yml
   issues: write # open/update a tracking issue on failure
 

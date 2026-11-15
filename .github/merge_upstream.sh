@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 #
-# Merges tolgee/tolgee-platform's main branch into this fork's feature/no_ee
-# branch, strips EE-only content (ee/backend, webapp/src/ee) back out, and
-# pushes the result (with tags) to origin.
+# Merges the latest release of tolgee/tolgee-platform (the commit of the
+# newest vX.Y.Z tag on its main branch - not main's head, which may contain
+# unreleased work) into this fork's feature/no_ee branch, strips EE-only
+# content (ee/backend, webapp/src/ee) back out, and pushes the result to
+# origin. The merge commit is tagged with that same release tag, and only that
+# tag is pushed - upstream's own tags point at commits carrying upstream's
+# .github/workflows/ files, which the Actions token isn't allowed to push.
 #
 # Usage:
 #   .github/merge_upstream.sh [--continue] [--skip-build-check] [--no-push] [--dry-run]
@@ -14,6 +18,9 @@ UPSTREAM_REMOTE="upstream"
 UPSTREAM_URL="https://github.com/tolgee/tolgee-platform.git"
 UPSTREAM_BRANCH="main"
 ORIGIN_REMOTE="origin"
+# Upstream tags are fetched here instead of refs/tags/, so they never clash with
+# the fork's own tag of the same name (which points at the fork's merge commit).
+UPSTREAM_TAGS_NS="refs/upstream-tags"
 TARGET_BRANCH="feature/no_ee"
 WORK_BRANCH="upstream-sync"
 # Whole directory trees that only exist to support the EE build and are
@@ -58,6 +65,15 @@ fi
 
 log() { echo "==> $*"; }
 err() { echo "ERROR: $*" >&2; }
+
+# Newest release tag (plain vX.Y.Z, no pre-release suffix) among the fetched
+# upstream tags that are reachable from the given commit-ish. Prints the bare
+# tag name, or nothing if there is none.
+latest_release_tag() {
+  git for-each-ref --merged "$1" --sort=-version:refname \
+    --format='%(refname:lstrip=2)' "$UPSTREAM_TAGS_NS/" |
+    grep -E -m1 '^v[0-9]+\.[0-9]+\.[0-9]+$' || true
+}
 
 # Removes ee/, webapp/src/ee/, and any backend/*/src/mainEe/ source-set
 # directories. Safe to call repeatedly (--ignore-unmatch), and safe even if
@@ -128,6 +144,9 @@ if ! git remote get-url "$UPSTREAM_REMOTE" >/dev/null 2>&1; then
   log "Adding missing remote '$UPSTREAM_REMOTE' -> $UPSTREAM_URL"
   git remote add "$UPSTREAM_REMOTE" "$UPSTREAM_URL"
 fi
+# Never auto-fetch upstream tags into refs/tags/ (also for a plain
+# `git fetch upstream`): the fork has its own tags with the same names.
+git config "remote.$UPSTREAM_REMOTE.tagOpt" --no-tags
 
 if $CONTINUE; then
   current_branch="$(git branch --show-current)"
@@ -158,8 +177,17 @@ fi
 # ---------------------------------------------------------------------------
 
 if ! $CONTINUE; then
-  log "Fetching $UPSTREAM_REMOTE/$UPSTREAM_BRANCH (with tags)..."
-  git fetch "$UPSTREAM_REMOTE" --tags "$UPSTREAM_BRANCH"
+  log "Fetching $UPSTREAM_REMOTE/$UPSTREAM_BRANCH (tags into $UPSTREAM_TAGS_NS/)..."
+  git fetch --no-tags "$UPSTREAM_REMOTE" \
+    "+refs/heads/$UPSTREAM_BRANCH:refs/remotes/$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" \
+    "+refs/tags/*:$UPSTREAM_TAGS_NS/*"
+
+  upstream_tag="$(latest_release_tag "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH")"
+  if [ -z "$upstream_tag" ]; then
+    err "No vX.Y.Z release tag found on $UPSTREAM_REMOTE/$UPSTREAM_BRANCH."
+    exit 1
+  fi
+  log "Latest upstream release: $upstream_tag ($(git rev-parse --short "$UPSTREAM_TAGS_NS/$upstream_tag^{commit}"))"
 
   log "Updating local $TARGET_BRANCH..."
   git checkout "$TARGET_BRANCH"
@@ -173,9 +201,10 @@ if ! $CONTINUE; then
   log "Creating work branch '$WORK_BRANCH' from '$TARGET_BRANCH'..."
   git checkout -b "$WORK_BRANCH" "$TARGET_BRANCH"
 
-  log "Merging $UPSTREAM_REMOTE/$UPSTREAM_BRANCH into $WORK_BRANCH..."
+  log "Merging upstream release $upstream_tag into $WORK_BRANCH..."
   merge_failed=false
-  git merge --no-ff --no-edit "$UPSTREAM_REMOTE/$UPSTREAM_BRANCH" || merge_failed=true
+  git merge --no-ff -m "Merge upstream release $upstream_tag into $TARGET_BRANCH" \
+    "$UPSTREAM_TAGS_NS/$upstream_tag^{commit}" || merge_failed=true
 
   if $merge_failed; then
     # -------------------------------------------------------------------
@@ -218,7 +247,7 @@ if ! $CONTINUE; then
     if [ "${#other_conflicts[@]}" -gt 0 ]; then
       log "Committing merge with ${#other_conflicts[@]} unresolved conflict(s) outside ee/ paths..."
       {
-        echo "Merge upstream/main into $WORK_BRANCH (UNRESOLVED CONFLICTS)"
+        echo "Merge upstream release $upstream_tag into $TARGET_BRANCH (UNRESOLVED CONFLICTS)"
         echo
         echo "The following files need manual review before this is a real merge:"
         for f in "${other_conflicts[@]}"; do
@@ -335,6 +364,11 @@ if [ -n "${GITHUB_OUTPUT:-}" ]; then
   echo "has_changes=$has_changes" >> "$GITHUB_OUTPUT"
 fi
 
+# The upstream release now contained in $TARGET_BRANCH. Derived from the
+# branch itself rather than from the fetch above, so it is also right after
+# --continue (where the merge happened in an earlier run).
+merged_tag="$(latest_release_tag "$TARGET_BRANCH")"
+
 if [ "${#SWEPT_WORKFLOW_FILES[@]}" -gt 0 ]; then
   mapfile -t swept_unique < <(printf '%s\n' "${SWEPT_WORKFLOW_FILES[@]}" | sort -u)
   log "NOTE: ${#swept_unique[@]} workflow file(s) differ from upstream but were left unchanged (GITHUB_TOKEN can't push workflow-file edits):"
@@ -342,7 +376,7 @@ if [ "${#SWEPT_WORKFLOW_FILES[@]}" -gt 0 ]; then
     echo "  - $f"
   done
   log "Review/apply upstream's changes to these manually and push with your own credentials, e.g.:"
-  log "  git diff $TARGET_BRANCH $UPSTREAM_REMOTE/$UPSTREAM_BRANCH -- ${swept_unique[*]}"
+  log "  git diff $TARGET_BRANCH $UPSTREAM_TAGS_NS/$merged_tag -- ${swept_unique[*]}"
   if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
     {
       echo "### Workflow files not auto-synced"
@@ -353,29 +387,52 @@ if [ "${#SWEPT_WORKFLOW_FILES[@]}" -gt 0 ]; then
       echo
       echo "Review upstream's version and apply manually if needed:"
       echo '```'
-      echo "git diff $TARGET_BRANCH $UPSTREAM_REMOTE/$UPSTREAM_BRANCH -- ${swept_unique[*]}"
+      echo "git diff $TARGET_BRANCH $UPSTREAM_TAGS_NS/$merged_tag -- ${swept_unique[*]}"
       echo '```'
     } >> "$GITHUB_STEP_SUMMARY"
   fi
 fi
 
+# ---------------------------------------------------------------------------
+# 9. Tag the merge commit with the merged upstream release tag
+# ---------------------------------------------------------------------------
+
+# release.yml derives the version from this via `git describe --tags`.
+release_tag=""
+if $has_changes; then
+  release_tag="$merged_tag"
+  if [ -z "$release_tag" ]; then
+    log "No upstream release tag reachable from $TARGET_BRANCH; not tagging."
+  elif git ls-remote --exit-code --tags "$ORIGIN_REMOTE" "refs/tags/$release_tag" >/dev/null 2>&1; then
+    log "Tag $release_tag already exists on $ORIGIN_REMOTE; not re-tagging."
+    release_tag=""
+  fi
+fi
+
 if $DRY_RUN; then
-  log "[dry-run] Would push $TARGET_BRANCH and tags to $ORIGIN_REMOTE now."
+  log "[dry-run] Would push $TARGET_BRANCH${release_tag:+ and tag $release_tag} to $ORIGIN_REMOTE now."
   exit 0
 fi
 
+if [ -n "$release_tag" ]; then
+  log "Tagging $TARGET_BRANCH ($(git rev-parse --short "$TARGET_BRANCH")) as $release_tag..."
+  git tag -f "$release_tag" "$TARGET_BRANCH"
+fi
+
 if $NO_PUSH; then
-  log "Skipping push (--no-push). Run 'git push $ORIGIN_REMOTE $TARGET_BRANCH --tags' manually when ready."
+  log "Skipping push (--no-push). Run 'git push $ORIGIN_REMOTE $TARGET_BRANCH${release_tag:+ refs/tags/$release_tag}' manually when ready."
   exit 0
 fi
 
 log "Pushing $TARGET_BRANCH to $ORIGIN_REMOTE..."
 git push "$ORIGIN_REMOTE" "$TARGET_BRANCH"
 
-log "Pushing tags to $ORIGIN_REMOTE..."
-git push "$ORIGIN_REMOTE" --tags
+if [ -n "$release_tag" ]; then
+  log "Pushing tag $release_tag to $ORIGIN_REMOTE..."
+  git push "$ORIGIN_REMOTE" "refs/tags/$release_tag"
+fi
 
 log "Cleaning up any stale '$WORK_BRANCH' branch on $ORIGIN_REMOTE (from a previously failed run)..."
 git push "$ORIGIN_REMOTE" --delete "$WORK_BRANCH" >/dev/null 2>&1 || true
 
-log "Done. $TARGET_BRANCH and tags pushed to $ORIGIN_REMOTE."
+log "Done. $TARGET_BRANCH${release_tag:+ and tag $release_tag} pushed to $ORIGIN_REMOTE."
