@@ -1,3 +1,82 @@
+# [3.246.0](https://github.com/tolgee/tolgee-platform/compare/v3.245.2...v3.246.0) (2026-11-19)
+
+
+### Bug Fixes
+
+* check Slack signatures against the raw request body ([#4068](https://github.com/tolgee/tolgee-platform/issues/4068)) ([40bf8a9](https://github.com/tolgee/tolgee-platform/commit/40bf8a90465d0b54d53c173bc888eaf7be893cb4)), closes [#4043](https://github.com/tolgee/tolgee-platform/issues/4043) [#4043](https://github.com/tolgee/tolgee-platform/issues/4043) [#4043](https://github.com/tolgee/tolgee-platform/issues/4043)
+
+
+### Features
+
+* allow API token access to AI prompt customization endpoints ([#4067](https://github.com/tolgee/tolgee-platform/issues/4067)) ([ea16ce3](https://github.com/tolgee/tolgee-platform/commit/ea16ce394449659c57f55f8c85e8c32cdda99756))
+
+## [3.245.2](https://github.com/tolgee/tolgee-platform/compare/v3.245.1...v3.245.2) (2026-11-19)
+
+
+### Bug Fixes
+
+* find a newly created language when the cached language list is stale ([#4061](https://github.com/tolgee/tolgee-platform/issues/4061)) ([7a2c1c2](https://github.com/tolgee/tolgee-platform/commit/7a2c1c2f8bb65b37887d887e62234520ea8d42e1))
+
+## [3.245.1](https://github.com/tolgee/tolgee-platform/compare/v3.245.0...v3.245.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* disable the vulnerable Base64 intrinsic in the Docker image (CVE-2026-114938) ([#4063](https://github.com/tolgee/tolgee-platform/issues/4063)) ([4b66187](https://github.com/tolgee/tolgee-platform/commit/4b661874a5ad12bc40549071ce414a19912c3f36))
+
+# [3.245.0](https://github.com/tolgee/tolgee-platform/compare/v3.244.0...v3.245.0) (2026-11-18)
+
+
+### Features
+
+* filter translations by AI review score ([#4060](https://github.com/tolgee/tolgee-platform/issues/4060)) ([9651419](https://github.com/tolgee/tolgee-platform/commit/9651419b90ececed80b1cb513cc2f3196a8f015e))
+
+# [3.244.0](https://github.com/tolgee/tolgee-platform/compare/v3.243.2...v3.244.0) (2026-11-18)
+
+
+### Bug Fixes
+
+* bump OkHttp to 4.12.1 to block compromised eMudhra certificates ([#4059](https://github.com/tolgee/tolgee-platform/issues/4059)) ([11fbec8](https://github.com/tolgee/tolgee-platform/commit/11fbec80331bfef7ae1ad7104b20e06e2165795e)), closes [#4019](https://github.com/tolgee/tolgee-platform/issues/4019)
+* verify the Slack signature for every interactivity payload ([#4043](https://github.com/tolgee/tolgee-platform/issues/4043)) ([bdd7d33](https://github.com/tolgee/tolgee-platform/commit/bdd7d330e031a0eb84d1cbeda3251695488353a5))
+
+
+### Features
+
+* community translation foundation (pitch tolgee/tolgee-platform[#3987](https://github.com/tolgee/tolgee-platform/issues/3987)) ([#3996](https://github.com/tolgee/tolgee-platform/issues/3996)) ([5212e6f](https://github.com/tolgee/tolgee-platform/commit/5212e6fd8c9a04c179ce14b1083456c2f9134f3d)), closes [tolgee/billing#350](https://github.com/tolgee/billing/issues/350) [tolgee/billing#350](https://github.com/tolgee/billing/issues/350)
+
+## [3.243.2](https://github.com/tolgee/tolgee-platform/compare/v3.243.1...v3.243.2) (2026-11-17)
+
+
+### Bug Fixes
+
+* return to the page that required login after social and SSO login ([#4040](https://github.com/tolgee/tolgee-platform/issues/4040)) ([bc8f32b](https://github.com/tolgee/tolgee-platform/commit/bc8f32ba42aef6495da0525bdca1734e54a0aa17))
+
+## [3.243.1](https://github.com/tolgee/tolgee-platform/compare/v3.243.0...v3.243.1) (2026-11-16)
+
+
+### Performance Improvements
+
+* faster branch creation ([#4047](https://github.com/tolgee/tolgee-platform/issues/4047)) ([d4fe402](https://github.com/tolgee/tolgee-platform/commit/d4fe402ad255302ce0713a24d72b711368171527)), closes [#4046](https://github.com/tolgee/tolgee-platform/issues/4046) [#4046](https://github.com/tolgee/tolgee-platform/issues/4046)
+
+# [3.243.0](https://github.com/tolgee/tolgee-platform/compare/v3.242.8...v3.243.0) (2026-11-16)
+
+
+### Bug Fixes
+
+* delete users with a pending email verification ([#4057](https://github.com/tolgee/tolgee-platform/issues/4057)) ([fabaec0](https://github.com/tolgee/tolgee-platform/commit/fabaec0e55917bb929a8a846b72a065fe6656864))
+
+
+### Features
+
+* add AI review rules ([#4032](https://github.com/tolgee/tolgee-platform/issues/4032)) ([68383a0](https://github.com/tolgee/tolgee-platform/commit/68383a0d93caf2c1ccb09a1d719c00c33912ee2a)), closes [#3955](https://github.com/tolgee/tolgee-platform/issues/3955)
+
+## [3.242.8](https://github.com/tolgee/tolgee-platform/compare/v3.242.7...v3.242.8) (2026-11-16)
+
+
+### Bug Fixes
+
+* own LLM provider keeps working when the organization is out of MT credits ([#4048](https://github.com/tolgee/tolgee-platform/issues/4048)) ([3bb9166](https://github.com/tolgee/tolgee-platform/commit/3bb9166041c731fa6107369038a84764024bc0b9))
+
 ## [3.242.7](https://github.com/tolgee/tolgee-platform/compare/v3.242.6...v3.242.7) (2026-11-12)
 
 

@@ -4,14 +4,21 @@ import io.tolgee.constants.Feature
 import io.tolgee.dtos.cacheable.LanguageDto
 import io.tolgee.dtos.request.translation.TranslationFilters
 import io.tolgee.model.Project
+import io.tolgee.model.branching.Branch
 import io.tolgee.model.enums.TranslationCommentState
 import io.tolgee.model.enums.TranslationState
 import io.tolgee.model.enums.TranslationSuggestionState
+import io.tolgee.model.enums.aiReview.AiReviewRuleMode
+import io.tolgee.model.enums.aiReview.AiReviewStatus
 import io.tolgee.model.enums.qa.QaIssueState
 import io.tolgee.model.views.KeyWithTranslationsView
 import io.tolgee.model.views.TranslationView
+import io.tolgee.repository.aiReview.AiReviewRuleRepository
 import io.tolgee.repository.qa.LanguageQaConfigRepository
 import io.tolgee.repository.qa.TranslationQaIssueRepository
+import io.tolgee.service.aiReview.AiReviewResultApplies
+import io.tolgee.service.aiReview.AiReviewTextHash
+import io.tolgee.service.branching.BranchService
 import io.tolgee.service.key.TagService
 import io.tolgee.service.label.LabelService
 import io.tolgee.service.project.ProjectFeatureGuard
@@ -19,6 +26,7 @@ import io.tolgee.service.project.ProjectService
 import io.tolgee.service.queryBuilders.CursorUtil
 import jakarta.persistence.EntityManager
 import jakarta.persistence.Tuple
+import org.springframework.context.annotation.Lazy
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -34,6 +42,9 @@ class TranslationViewDataProvider(
   private val languageQaConfigRepository: LanguageQaConfigRepository,
   private val projectFeatureGuard: ProjectFeatureGuard,
   private val projectService: ProjectService,
+  private val aiReviewRuleRepository: AiReviewRuleRepository,
+  @Lazy
+  private val branchService: BranchService,
 ) {
   companion object {
     private const val IN_CLAUSE_CHUNK_SIZE = 10_000
@@ -51,6 +62,8 @@ class TranslationViewDataProvider(
     val qaEnabled = projectFeatureGuard.isFeatureEnabled(Feature.QA_CHECKS, project)
     val qaDisabledLanguageIds = resolveQaDisabledLanguageIds(projectId, qaEnabled)
     val tasksEnabled = areTasksEnabled(project)
+    val aiReviewEnabled = projectFeatureGuard.isFeatureEnabled(Feature.AI_REVIEW, project)
+    val aiReviewFilterData = resolveAiReviewFilterData(project, aiReviewEnabled, params)
 
     createFailedKeysInJobTempTable(params.filterFailedKeysOfJob)
 
@@ -64,6 +77,7 @@ class TranslationViewDataProvider(
         qaEnabled,
         qaDisabledLanguageIds,
         tasksEnabled,
+        aiReviewFilterData,
       )
     val count = em.createQuery(countBuilder.countQuery).singleResult
 
@@ -77,6 +91,7 @@ class TranslationViewDataProvider(
         qaEnabled,
         qaDisabledLanguageIds,
         tasksEnabled,
+        aiReviewFilterData,
       )
     val query = em.createQuery(translationsViewQueryBuilder.dataQuery).setMaxResults(pageable.pageSize)
     if (cursor == null) {
@@ -88,9 +103,6 @@ class TranslationViewDataProvider(
     deleteFailedKeysInJobTempTable()
 
     val keyIds = views.map { it.keyId }
-    // Fetch translations + all per-translation counts (comments, suggestions, QA issues)
-    // in a single query. The inline count subqueries are cheap because they only run on
-    // the page's translations (~pageSize × langCount rows, typically <500).
     populateTranslationsWithCounts(keyIds, languages, views, qaEnabled, qaDisabledLanguageIds)
 
     val translationIds =
@@ -111,6 +123,9 @@ class TranslationViewDataProvider(
     if (qaEnabled && includeQaIssues && translationIds.isNotEmpty()) {
       populateQaIssues(translationIds, views, qaDisabledLanguageIds)
     }
+    if (aiReviewEnabled && translationIds.isNotEmpty()) {
+      populateAiReviewSummaries(translationIds, views)
+    }
     return PageImpl(views, pageable, count)
   }
 
@@ -120,20 +135,21 @@ class TranslationViewDataProvider(
    * are cheap because they only run on the page's translations (~pageSize × langCount rows,
    * typically <500), not on the entire project's translation set.
    *
-   * Missing `(key, language)` pairs are filled in with a placeholder [TranslationView] in the
-   * `UNTRANSLATED` state so that every returned view has an entry for every requested language.
+   * Every `(key, language)` pair starts as a placeholder [TranslationView] in the `UNTRANSLATED`
+   * state, so that every returned view has an entry for every requested language. The query only
+   * returns the pairs carrying data: the full join adds the pairs that have suggestions but no
+   * translation, and those only get their suggestion counts set on the placeholder.
    *
-   * This combines what would otherwise be 4 separate queries (translation fetch + 3 count
-   * queries) into 1. The QA issue count expression ([qaCountExpr]) has three shapes: a literal
-   * `0L` when QA is off project-wide, a plain count subquery when enabled, and a count subquery
-   * with a `language.id not in (:qaDisabledLanguageIds)` exclusion when some languages have QA
-   * disabled. The `0L` shape keeps the column layout (and the `COL_*` indices) stable.
+   * Both sides of the full join must filter on the page's keys and languages themselves. A filter
+   * outside the join would have to let the unmatched rows through, which forces a scan of the whole
+   * translation table. A row per `(key, language)` pair (`key × language left join translation`)
+   * was measured up to 20× slower on projects with 100+ selected languages, where its cost estimate
+   * crosses Postgres' `jit_above_cost`.
    *
-   * Uses plain JPQL rather than Criteria API because the query has 5 inline correlated count
-   * subqueries. The only dynamic parts are the `qaCountExpr` shape above and its two conditional
-   * parameter binds (`openQa`, and `qaDisabledLanguageIds` only when the exclusion clause is
-   * present); expressing the 5 correlated subqueries in Criteria API would require dozens of lines
-   * of nested `subquery.correlate()`, so the JPQL string stays more readable.
+   * The QA issue count expression ([qaCountExpr]) has three shapes: a literal `0L` when QA is off
+   * project-wide, a plain count subquery when enabled, and a count subquery with a
+   * `languageId not in (:qaDisabledLanguageIds)` exclusion when some languages have QA disabled.
+   * The `0L` shape keeps the column layout stable.
    */
   @Suppress("LongMethod")
   private fun populateTranslationsWithCounts(
@@ -166,19 +182,29 @@ class TranslationViewDataProvider(
           .createQuery(
             """
             select t.id, t.text, t.state, t.auto, t.mtProvider, t.outdated, t.qaChecksStale,
-                   t.key.id, t.language.id,
+                   coalesce(t.keyId, s.keyId), coalesce(t.languageId, s.languageId),
                    (select count(tc) from TranslationComment tc
                     where tc.translation.id = t.id),
                    (select sum(case when tc2.state = :unresolved then 1L else 0L end)
                     from TranslationComment tc2 where tc2.translation.id = t.id),
-                   (select count(ts) from TranslationSuggestion ts
-                    where ts.key.id = t.key.id and ts.language.id = t.language.id),
-                   (select sum(case when ts2.state = :activeSuggestion then 1L else 0L end)
-                    from TranslationSuggestion ts2
-                    where ts2.key.id = t.key.id and ts2.language.id = t.language.id),
+                   s.total,
+                   s.active,
                    $qaCountExpr
-            from Translation t
-            where t.key.id in :keyIds and t.language.id in :languageIds
+            from (
+              select tr.id as id, tr.text as text, tr.state as state, tr.auto as auto,
+                     tr.mtProvider as mtProvider, tr.outdated as outdated,
+                     tr.qaChecksStale as qaChecksStale,
+                     tr.key.id as keyId, tr.language.id as languageId
+              from Translation tr
+              where tr.key.id in :keyIds and tr.language.id in :languageIds
+            ) t
+            full join (
+              select ts.key.id as keyId, ts.language.id as languageId, count(ts) as total,
+                     sum(case when ts.state = :activeSuggestion then 1L else 0L end) as active
+              from TranslationSuggestion ts
+              where ts.key.id in :keyIds and ts.language.id in :languageIds
+              group by ts.key.id, ts.language.id
+            ) s on s.keyId = t.keyId and s.languageId = t.languageId
             """.trimIndent(),
             Tuple::class.java,
           ).setParameter("keyIds", keyIdChunk)
@@ -197,9 +223,17 @@ class TranslationViewDataProvider(
         val langId = row.get(8) as Long
         val view = viewsByKeyId[keyId] ?: continue
         val tag = tagById[langId] ?: continue
+        val translationId = row.get(0) as Long?
+        if (translationId == null) {
+          view.translations[tag]?.apply {
+            activeSuggestionCount = (row.get(12) as Number?)?.toLong() ?: 0L
+            totalSuggestionCount = (row.get(11) as Number?)?.toLong() ?: 0L
+          }
+          continue
+        }
         view.translations[tag] =
           TranslationView(
-            id = row.get(0) as Long?,
+            id = translationId,
             text = row.get(1) as String?,
             state = row.get(2) as TranslationState,
             auto = row.get(3) as Boolean,
@@ -255,7 +289,7 @@ class TranslationViewDataProvider(
     }
     return """(select count(qa) from TranslationQaIssue qa
             where qa.translation.id = t.id and qa.state = :openQa
-              and t.language.id not in :qaDisabledLanguageIds)"""
+              and t.languageId not in :qaDisabledLanguageIds)"""
   }
 
   /**
@@ -325,6 +359,8 @@ class TranslationViewDataProvider(
     val qaEnabled = projectFeatureGuard.isFeatureEnabled(Feature.QA_CHECKS, project)
     val qaDisabledLanguageIds = resolveQaDisabledLanguageIds(projectId, qaEnabled)
     val tasksEnabled = areTasksEnabled(project)
+    val aiReviewEnabled = projectFeatureGuard.isFeatureEnabled(Feature.AI_REVIEW, project)
+    val aiReviewFilterData = resolveAiReviewFilterData(project, aiReviewEnabled, params)
     createFailedKeysInJobTempTable(params.filterFailedKeysOfJob)
     val translationsViewQueryBuilder =
       TranslationsViewQueryBuilder(
@@ -334,6 +370,7 @@ class TranslationViewDataProvider(
         params = params,
         sort = Sort.by(Sort.Order.asc(KeyWithTranslationsView::keyId.name)),
         entityManager = em,
+        aiReviewFilterData = aiReviewFilterData,
         qaEnabled = qaEnabled,
         qaDisabledLanguageIds = qaDisabledLanguageIds,
         tasksEnabled = tasksEnabled,
@@ -341,6 +378,63 @@ class TranslationViewDataProvider(
     val result = em.createQuery(translationsViewQueryBuilder.keyIdsQuery).resultList
     deleteFailedKeysInJobTempTable()
     return result
+  }
+
+  private fun populateAiReviewSummaries(
+    translationIds: List<Long>,
+    views: List<KeyWithTranslationsView>,
+  ) {
+    val byId =
+      views
+        .flatMap { it.translations.values }
+        .filter { it.id != null }
+        .associateBy { it.id!! }
+    translationIds.chunked(IN_CLAUSE_CHUNK_SIZE).forEach { chunk ->
+      @Suppress("UNCHECKED_CAST")
+      val rows =
+        em
+          .createNativeQuery(
+            """
+            select r.translation_id, r.status, r.score, r.rule_mode, (r.last_failure_reason is not null),
+                   t.state, r.re_review_requested
+            from translation_ai_review r
+            join translation t on t.id = r.translation_id
+            where r.translation_id in :ids
+              and r.text_hash = ${AiReviewTextHash.CURRENT_TEXT_SQL}
+            """,
+          ).setParameter("ids", chunk)
+          .resultList as List<Array<Any?>>
+      rows.forEach { row ->
+        val view = byId[(row[0] as Number).toLong()] ?: return@forEach
+        val status = AiReviewStatus.valueOf(row[1] as String)
+        val state = TranslationState.entries[(row[5] as Number).toInt()]
+        if (!AiReviewResultApplies.stillApplies(status, state)) return@forEach
+        view.aiReviewStatus = status
+        view.aiReviewScore = (row[2] as Number?)?.toInt()
+        view.aiReviewScoreOnlyRun =
+          row[3] == AiReviewRuleMode.SCORE_ONLY.name ||
+          status == AiReviewStatus.SCORE_ONLY_PASS ||
+          status == AiReviewStatus.SCORE_ONLY_FAIL
+        view.aiReviewLastFailed = row[4] as Boolean
+        view.aiReviewQueued = status == AiReviewStatus.PENDING || row[6] as Boolean
+      }
+    }
+  }
+
+  /** Null means the feature is off and the AI review filters are ignored. */
+  private fun resolveAiReviewFilterData(
+    project: Project,
+    aiReviewEnabled: Boolean,
+    params: TranslationFilters,
+  ): AiReviewFilterData? {
+    if (!aiReviewEnabled) return null
+    if (params.filterAiReviewStatus.isNullOrEmpty() && params.aiReviewScoreFilter == null) return null
+    return AiReviewFilterData(
+      rules = aiReviewRuleRepository.findEnabledWithScope(project.id),
+      branchingEnabled = projectFeatureGuard.isFeatureEnabled(Feature.BRANCHING, project),
+      defaultBranchName = branchService.getDefaultBranch(project.id)?.name ?: Branch.DEFAULT_BRANCH_NAME,
+      baseLanguageId = project.baseLanguage?.id,
+    )
   }
 
   private fun getTranslationsViewQueryBuilder(
@@ -352,6 +446,7 @@ class TranslationViewDataProvider(
     qaEnabled: Boolean,
     qaDisabledLanguageIds: Set<Long>,
     tasksEnabled: Boolean,
+    aiReviewFilterData: AiReviewFilterData?,
   ) = TranslationsViewQueryBuilder(
     cb = em.criteriaBuilder,
     projectId = projectId,
@@ -360,6 +455,7 @@ class TranslationViewDataProvider(
     sort = pageable.sort,
     cursor = cursor?.let { CursorUtil.parseCursor(it) },
     entityManager = em,
+    aiReviewFilterData = aiReviewFilterData,
     qaEnabled = qaEnabled,
     qaDisabledLanguageIds = qaDisabledLanguageIds,
     tasksEnabled = tasksEnabled,

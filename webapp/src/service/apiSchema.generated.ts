@@ -450,7 +450,8 @@ export interface paths {
     delete: operations["deleteProject"];
   };
   "/v2/projects/{projectId}/activity": {
-    get: operations["getActivity"];
+    /** With `activity-contributions.view` alone, which is what a public project gives everyone, only translation work is listed: translating, changing translation states, commenting, suggesting and edits made in the key dialog. `activity.view` lists everything. */
+    get: operations["getActivity_1"];
   };
   "/v2/projects/{projectId}/activity/revisions/{revisionId}": {
     get: operations["getSingleRevision"];
@@ -464,6 +465,27 @@ export interface paths {
   "/v2/projects/{projectId}/ai-prompt-customization": {
     get: operations["getPromptProjectCustomization"];
     put: operations["setPromptProjectCustomization"];
+  };
+  "/v2/projects/{projectId}/ai-review-rules": {
+    get: operations["listAiReviewRules"];
+    post: operations["createAiReviewRule"];
+  };
+  "/v2/projects/{projectId}/ai-review-rules/enabled": {
+    put: operations["setProjectAiReviewEnabled"];
+  };
+  "/v2/projects/{projectId}/ai-review-rules/{ruleId}": {
+    get: operations["getAiReviewRule"];
+    put: operations["updateAiReviewRule"];
+    delete: operations["deleteAiReviewRule"];
+  };
+  "/v2/projects/{projectId}/ai-review-rules/{ruleId}/enabled": {
+    put: operations["setAiReviewRuleEnabled"];
+  };
+  "/v2/projects/{projectId}/ai-review/run": {
+    post: operations["startAiReviewRun"];
+  };
+  "/v2/projects/{projectId}/ai-review/run/preview": {
+    post: operations["previewAiReviewRun"];
   };
   "/v2/projects/{projectId}/all-keys": {
     get: operations["getAllKeys"];
@@ -551,6 +573,22 @@ export interface paths {
   "/v2/projects/{projectId}/branches/{branchId}/protected": {
     post: operations["setProtected"];
   };
+  "/v2/projects/{projectId}/community-page": {
+    /** Sets the texts and flags shown on the project's community page. All fields are replaced: a missing or empty text clears it. The settings stay when the project is closed to the community. Only the organization owner or a server admin can change them. */
+    put: operations["setCommunityPage"];
+  };
+  "/v2/projects/{projectId}/community/activity": {
+    /** Counts of contributions, suggestions, and accepted and declined suggestions for each day or week of the range, oldest first, with zeros where nothing happened. Also two exact counts of translations, where a translation is one key in one language: `translationsWithAnySuggestion` counts the translations that received a suggestion within the range, and `translationsWithPendingSuggestion` counts those of them that still have a pending suggestion. A pending suggestion created before the range is not counted. By default, the range is the 12 weeks ending with the week of `to` (today, unless given). By default there is one bucket per week. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. The counts of contributions, suggestions, and accepted and declined suggestions are approximate: they come from the activity log and never go down, so a suggestion made in one period and accepted or declined in a later one counts in both. The two translation counts are exact: they are read from the suggestions as they are now. */
+    get: operations["getActivity"];
+  };
+  "/v2/projects/{projectId}/community/contributors": {
+    /** Users who worked on translations in the project within the range: translating, changing translation states, commenting, suggesting, and accepting or declining suggestions. For each user: the number of contributions, suggestions, accepted and declined suggestions and the counts per language, all within the range. The dates of the first and last contribution are not limited by the range or the languages: they cover the user's whole history in the project. By default, the range is the 12 weeks ending with the week of `to` (today, unless given). The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. The counts of contributions, suggestions, and accepted and declined suggestions are approximate: they come from the activity log and never go down, so a suggestion made in one period and accepted or declined in a later one counts in both. `active` is exact: the number of the user's suggestions that are pending right now. Sort by contributions, suggested, accepted, declined, active or lastContributionAt; users without a lastContributionAt come last. By default, most contributions come first, then most suggestions. */
+    get: operations["getContributors_1"];
+  };
+  "/v2/projects/{projectId}/community/contributors/{userId}": {
+    /** One user of the contributors list, with the same counts and languages. The dates of the first and last contribution are not limited by the range or the languages: they cover the user's whole history in the project. Without `from`, the counts and languages cover the user's whole history in the project up to `to` (today, unless given). With `from`, the range works as on the list: The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. The counts of contributions, suggestions, and accepted and declined suggestions are approximate: they come from the activity log and never go down, so a suggestion made in one period and accepted or declined in a later one counts in both. `active` is exact: the number of the user's suggestions that are pending right now. Returns 404 when the user has no contributions in the project within the range and languages, or the account is deleted or disabled. */
+    get: operations["getContributor"];
+  };
   "/v2/projects/{projectId}/content-delivery-configs": {
     get: operations["list_2"];
     post: operations["create_10"];
@@ -579,7 +617,7 @@ export interface paths {
     post: operations["testExisting"];
   };
   "/v2/projects/{projectId}/contributors": {
-    /** Returns users who have activity on the project but are not currently its members. Deleted and disabled users are excluded. Sortable by lastContributionAt and firstContributionAt only; any other sort property falls back to lastContributionAt descending. */
+    /** Returns users with translation contributions on the project (translations, state changes, comments, suggestions and their moderation) who are not currently its members. Deleted and disabled users are excluded. Sortable by lastContributionAt and firstContributionAt only; any other sort property falls back to lastContributionAt descending. */
     get: operations["getContributors"];
   };
   "/v2/projects/{projectId}/current-batch-jobs": {
@@ -907,7 +945,7 @@ export interface paths {
     delete: operations["deletePrompt"];
   };
   "/v2/projects/{projectId}/publishing": {
-    /** Marks the project as public or private. Only the organization owner or a server admin can change this. */
+    /** Marks the project as public or private. Opening a private project also turns suggestions on (`suggestionsMode` becomes `ENABLED`); closing it, or opening an already public project, leaves `suggestionsMode` as it is. Only the organization owner or a server admin can change this. */
     put: operations["setProjectPublic"];
   };
   "/v2/projects/{projectId}/qa-settings": {
@@ -940,6 +978,11 @@ export interface paths {
   };
   "/v2/projects/{projectId}/single-step-import-resolvable": {
     post: operations["singleStepResolvableImport"];
+  };
+  "/v2/projects/{projectId}/source-change-settings": {
+    get: operations["getSourceChangeSettings"];
+    /** The setting decides whether human work is overwritten automatically later. */
+    put: operations["setSourceChangeSettings"];
   };
   "/v2/projects/{projectId}/start-batch-job/ai-playground-translate": {
     post: operations["aiPlaygroundTranslate"];
@@ -994,6 +1037,7 @@ export interface paths {
     get: operations["getProjectStats"];
   };
   "/v2/projects/{projectId}/stats/daily-activity": {
+    /** With `activity-contributions.view` alone, only the events the project activity lists for that scope are counted. `activity.view` counts everything. */
     get: operations["getProjectDailyActivity"];
   };
   "/v2/projects/{projectId}/stats/qa-issue-counts": {
@@ -1110,6 +1154,12 @@ export interface paths {
     /** Returns all translations for specified languages */
     get: operations["getAllTranslations"];
   };
+  "/v2/projects/{projectId}/translations/{translationId}/ai-review": {
+    get: operations["getAiReview"];
+  };
+  "/v2/projects/{projectId}/translations/{translationId}/ai-review/retry": {
+    post: operations["retryAiReview"];
+  };
   "/v2/projects/{projectId}/translations/{translationId}/comments": {
     /** Returns translation comments of translation */
     get: operations["getAll_3"];
@@ -1212,7 +1262,7 @@ export interface paths {
     get: operations["getInfo_4"];
   };
   "/v2/public/projects/with-stats": {
-    /** Returns all public projects (including statistics), discoverable by anyone — no authentication required */
+    /** Returns all public projects (including statistics), discoverable by anyone — no authentication required. Ordered by the key count in the base language's statistics (largest first), which can briefly lag behind the `keyCount` of each project, then by name and id; the sort parameter is ignored. */
     get: operations["getAllPublicWithStatistics"];
   };
   "/v2/public/scope-info/hierarchy": {
@@ -1342,6 +1392,14 @@ export interface paths {
     /** Returns information about sso configuration affecting the user. */
     get: operations["getSso"];
   };
+  "/v2/users/{userId}/community-activity": {
+    /** The user's translation work in public projects, newest first; the sort parameter is ignored. Each entry has the shape of an entry in the project activity log, with the project added and the author left out. Returns 404 whenever the community profile does. */
+    get: operations["getActivityFeed"];
+  };
+  "/v2/users/{userId}/community-profile": {
+    /** The user's contribution counts, languages and the public projects they contributed to, over their whole history, plus one bucket of counts per day or week of the range. By default, the range is the 365 days ending with `to` (today, unless given), with one bucket per day. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. Only contributions to public projects count. An unknown, deleted or disabled user returns 404 `user_not_found`. A profile set to private, or one left on the default visibility by a user without contributions to public projects, returns 404 `community_profile_private`; users always see their own profile. The counts are approximate: they come from the activity log and never go down, so a suggestion made on one day and accepted or declined on a later day counts on both. `active` is exact: the number of the user's suggestions that are pending right now, in total and per project. */
+    get: operations["getProfile"];
+  };
 }
 
 export interface components {
@@ -1351,15 +1409,107 @@ export interface components {
     };
     AiPlaygroundResultModel: {
       contextDescription?: string;
+      issues?: components["schemas"]["AiReviewIssue"][];
       /** Format: int64 */
       keyId: number;
       /** Format: int64 */
       languageId: number;
+      /** Format: int32 */
+      score?: number;
       translation?: string;
     };
     AiPlaygroundResultRequest: {
       keys: number[];
       languages: number[];
+    };
+    AiReviewIssue: {
+      category?: string;
+      message: string;
+      /** Format: int32 */
+      points: number;
+      severity: string;
+    };
+    AiReviewIssueModel: {
+      category?: string;
+      message: string;
+      /** Format: int32 */
+      points: number;
+      severity: string;
+    };
+    /** @description Null in the create, update and enable responses. The rule list has the counts. */
+    AiReviewRuleCountsModel: {
+      /** Format: int64 */
+      autoReviewed: number;
+      /** Format: int64 */
+      backlog: number;
+      /** Format: int64 */
+      failed: number;
+      /** Format: int64 */
+      scored: number;
+      /** Format: int64 */
+      wouldBeAutoReviewed: number;
+    };
+    AiReviewRuleEnabledRequest: {
+      enabled: boolean;
+    };
+    AiReviewRuleModel: {
+      branchIn: string[];
+      branchNotIn: string[];
+      counts?: components["schemas"]["AiReviewRuleCountsModel"];
+      enabled: boolean;
+      /** Format: int64 */
+      id: number;
+      languageIds: number[];
+      /** @enum {string} */
+      mode: "SCORE_ONLY" | "ACTIVE";
+      name: string;
+      namespaceIn: string[];
+      namespaceNotIn: string[];
+      never: boolean;
+      /** Format: int64 */
+      promptId?: number;
+      skipOpenQaIssues: boolean;
+      tagIn: string[];
+      tagNotIn: string[];
+      /** Format: int32 */
+      threshold: number;
+    };
+    AiReviewRuleRequest: {
+      branchIn: string[];
+      branchNotIn: string[];
+      enabled: boolean;
+      languageIds: number[];
+      /** @enum {string} */
+      mode: "SCORE_ONLY" | "ACTIVE";
+      name: string;
+      namespaceIn: string[];
+      namespaceNotIn: string[];
+      never: boolean;
+      /** Format: int64 */
+      promptId?: number;
+      skipOpenQaIssues: boolean;
+      tagIn: string[];
+      tagNotIn: string[];
+      /** Format: int32 */
+      threshold: number;
+    };
+    AiReviewRunPreviewModel: {
+      /** Format: int64 */
+      overriddenToReReview: number;
+      /** Format: int64 */
+      scoreOnlyRunCount: number;
+      skipped: { [key: string]: number };
+      /** Format: int64 */
+      toReview: number;
+    };
+    AiReviewRunRequest: {
+      failedOnly: boolean;
+      keyIds?: number[];
+      languageIds: number[];
+      reReview: boolean;
+      /** Format: int64 */
+      ruleId?: number;
+      translationIds?: number[];
     };
     AnnouncementDto: {
       /** @enum {string} */
@@ -1450,6 +1600,7 @@ export interface components {
         | "screenshots.delete"
         | "screenshots.view"
         | "activity.view"
+        | "activity-contributions.view"
         | "languages.edit"
         | "admin"
         | "project.edit"
@@ -1539,6 +1690,7 @@ export interface components {
         | "screenshots.delete"
         | "screenshots.view"
         | "activity.view"
+        | "activity-contributions.view"
         | "languages.edit"
         | "admin"
         | "project.edit"
@@ -1719,7 +1871,10 @@ export interface components {
        * @enum {string}
        */
       type:
+        | "AI_REVIEW"
+        | "AI_REVIEW_DEMOTION"
         | "AI_PLAYGROUND_TRANSLATE"
+        | "AI_PLAYGROUND_REVIEW"
         | "PRE_TRANSLATE_BT_TM"
         | "MACHINE_TRANSLATE"
         | "AUTO_TRANSLATE"
@@ -1935,6 +2090,17 @@ export interface components {
       /** @description Name of the branch this branch was created from */
       originBranchName?: string;
     };
+    Bucket: {
+      /** Format: int64 */
+      accepted: number;
+      /** Format: int64 */
+      contributions: number;
+      /** Format: int64 */
+      declined: number;
+      start: string;
+      /** Format: int64 */
+      suggested: number;
+    };
     BusinessEventReportRequest: {
       anonymousUserId?: string;
       data?: { [key: string]: { [key: string]: unknown } };
@@ -1959,6 +2125,11 @@ export interface components {
     CollectionModelAiPlaygroundResultModel: {
       _embedded?: {
         results?: components["schemas"]["AiPlaygroundResultModel"][];
+      };
+    };
+    CollectionModelAiReviewRuleModel: {
+      _embedded?: {
+        aiReviewRules?: components["schemas"]["AiReviewRuleModel"][];
       };
     };
     CollectionModelAutoTranslationConfigModel: {
@@ -2126,6 +2297,205 @@ export interface components {
         workspaces?: components["schemas"]["WorkspaceModel"][];
       };
     };
+    CommunityActivityModel: {
+      counts?: { [key: string]: number };
+      meta?: { [key: string]: { [key: string]: unknown } };
+      modifiedEntities?: {
+        [key: string]: components["schemas"]["ModifiedEntityModel"][];
+      };
+      params?: { [key: string]: unknown };
+      project: components["schemas"]["SimpleProjectModel"];
+      /** Format: int64 */
+      revisionId: number;
+      /** Format: int64 */
+      timestamp: number;
+      /** @enum {string} */
+      type:
+        | "UNKNOWN"
+        | "SET_TRANSLATION_STATE"
+        | "SET_TRANSLATIONS"
+        | "DISMISS_AUTO_TRANSLATED_STATE"
+        | "SET_OUTDATED_FLAG"
+        | "TRANSLATION_COMMENT_ADD"
+        | "TRANSLATION_COMMENT_DELETE"
+        | "TRANSLATION_COMMENT_EDIT"
+        | "TRANSLATION_COMMENT_SET_STATE"
+        | "SCREENSHOT_DELETE"
+        | "SCREENSHOT_ADD"
+        | "KEY_TAGS_EDIT"
+        | "KEY_NAME_EDIT"
+        | "KEY_CHARACTER_LIMIT_EDIT"
+        | "KEY_DELETE"
+        | "KEY_SOFT_DELETE"
+        | "KEY_RESTORE"
+        | "KEY_HARD_DELETE"
+        | "BATCH_KEY_RESTORE"
+        | "BATCH_KEY_HARD_DELETE"
+        | "CREATE_KEY"
+        | "COMPLEX_EDIT"
+        | "IMPORT"
+        | "CREATE_LANGUAGE"
+        | "EDIT_LANGUAGE"
+        | "DELETE_LANGUAGE"
+        | "HARD_DELETE_LANGUAGE"
+        | "CREATE_PROJECT"
+        | "EDIT_PROJECT"
+        | "NAMESPACE_EDIT"
+        | "BATCH_PRE_TRANSLATE_BY_TM"
+        | "BATCH_MACHINE_TRANSLATE"
+        | "AUTO_TRANSLATE"
+        | "BATCH_CLEAR_TRANSLATIONS"
+        | "BATCH_COPY_TRANSLATIONS"
+        | "BATCH_SET_TRANSLATION_STATE"
+        | "BATCH_TAG_KEYS"
+        | "BATCH_UNTAG_KEYS"
+        | "BATCH_SET_KEYS_NAMESPACE"
+        | "BATCH_ASSIGN_TRANSLATION_LABEL"
+        | "BATCH_UNASSIGN_TRANSLATION_LABEL"
+        | "AUTOMATION"
+        | "CONTENT_DELIVERY_CONFIG_CREATE"
+        | "CONTENT_DELIVERY_CONFIG_UPDATE"
+        | "CONTENT_DELIVERY_CONFIG_DELETE"
+        | "CONTENT_STORAGE_CREATE"
+        | "CONTENT_STORAGE_UPDATE"
+        | "CONTENT_STORAGE_DELETE"
+        | "WEBHOOK_CONFIG_CREATE"
+        | "WEBHOOK_CONFIG_UPDATE"
+        | "WEBHOOK_CONFIG_DELETE"
+        | "COMPLEX_TAG_OPERATION"
+        | "TASKS_CREATE"
+        | "TASK_CREATE"
+        | "TASK_UPDATE"
+        | "TASK_KEYS_UPDATE"
+        | "TASK_FINISH"
+        | "TASK_CLOSE"
+        | "TASK_REOPEN"
+        | "TASK_KEY_UPDATE"
+        | "ORDER_TRANSLATION"
+        | "GLOSSARY_CREATE"
+        | "GLOSSARY_UPDATE"
+        | "GLOSSARY_DELETE"
+        | "GLOSSARY_IMPORT"
+        | "GLOSSARY_TERM_CREATE"
+        | "GLOSSARY_TERM_UPDATE"
+        | "GLOSSARY_TERM_DELETE"
+        | "GLOSSARY_TERM_TRANSLATION_UPDATE"
+        | "TRANSLATION_MEMORY_CREATE"
+        | "TRANSLATION_MEMORY_UPDATE"
+        | "TRANSLATION_MEMORY_DELETE"
+        | "TRANSLATION_MEMORY_ASSIGN_PROJECT"
+        | "TRANSLATION_MEMORY_UNASSIGN_PROJECT"
+        | "TRANSLATION_MEMORY_UPDATE_PROJECT_CONFIG"
+        | "TRANSLATION_MEMORY_ENTRY_CREATE"
+        | "TRANSLATION_MEMORY_ENTRY_UPDATE"
+        | "TRANSLATION_MEMORY_ENTRY_DELETE"
+        | "TRANSLATION_MEMORY_IMPORT"
+        | "TRANSLATION_MEMORY_COPY_FROM_PROJECT"
+        | "TRANSLATION_LABELS_EDIT"
+        | "TRANSLATION_LABEL_ASSIGN"
+        | "TRANSLATION_LABEL_CREATE"
+        | "TRANSLATION_LABEL_UPDATE"
+        | "TRANSLATION_LABEL_DELETE"
+        | "CREATE_SUGGESTION"
+        | "DECLINE_SUGGESTION"
+        | "ACCEPT_SUGGESTION"
+        | "REVERSE_SUGGESTION"
+        | "DELETE_SUGGESTION"
+        | "SUGGESTION_SET_ACTIVE"
+        | "AI_PROMPT_CREATE"
+        | "AI_PROMPT_UPDATE"
+        | "AI_PROMPT_DELETE"
+        | "AI_REVIEW_SETTINGS_UPDATE"
+        | "AI_REVIEW_ENABLED_UPDATE"
+        | "AI_REVIEW_RULE_CREATE"
+        | "AI_REVIEW_RULE_UPDATE"
+        | "AI_REVIEW_RULE_DELETE"
+        | "AI_REVIEW"
+        | "AI_REVIEW_DEMOTION"
+        | "BRANCH_CREATE"
+        | "BRANCH_RENAME"
+        | "BRANCH_DELETE"
+        | "BRANCH_PROTECTION_CHANGE"
+        | "BRANCH_MERGE"
+        | "QA_ISSUE_IGNORE"
+        | "QA_ISSUE_UNIGNORE";
+    };
+    CommunityActivityStatsModel: {
+      buckets: components["schemas"]["Bucket"][];
+      /** Format: int64 */
+      translationsWithAnySuggestion: number;
+      /** Format: int64 */
+      translationsWithPendingSuggestion: number;
+    };
+    CommunityContributorModel: {
+      /**
+       * Format: int64
+       * @description Approximate: counted from the activity log within the range, and never goes down.
+       */
+      accepted: number;
+      /**
+       * Format: int64
+       * @description Exact: the number of the user's suggestions in this project that are pending right now, whatever the range. When `languageIds` is given, only those languages count.
+       */
+      active: number;
+      avatar?: components["schemas"]["Avatar"];
+      /**
+       * Format: int64
+       * @description Approximate: counted from the activity log within the range, and never goes down.
+       */
+      contributions: number;
+      /**
+       * Format: int64
+       * @description Approximate: counted from the activity log within the range, and never goes down.
+       */
+      declined: number;
+      /** Format: int64 */
+      firstContributionAt?: number;
+      /** Format: int64 */
+      id: number;
+      languages: components["schemas"]["LanguageCounts"][];
+      /** Format: int64 */
+      lastContributionAt?: number;
+      name?: string;
+      /** @description Whether the user's community profile is visible to others: the user's profile visibility setting, or, when left on the default, whether the user has at least one counted contribution in a community (public) project, whichever project this list is for. The same for every caller; a user always sees their own profile, whatever this says. */
+      profilePublic: boolean;
+      /**
+       * Format: int64
+       * @description Approximate: counted from the activity log within the range, and never goes down.
+       */
+      suggested: number;
+    };
+    CommunityPageRequest: {
+      /** @description Link to the app that supports in-context translation. Only http and https are accepted. */
+      communityAppUrl?: string;
+      /** @description Markdown shown on the community page. Empty or missing clears it. */
+      communityDescription?: string;
+      /** @description Markdown on how to contribute. Empty or missing clears it, and the page shows its default text. */
+      communityGuidelines?: string;
+      /** @description Whether the community page tells visitors that the app supports in-context translation. */
+      communityInContext: boolean;
+      /** @description Whether the owner marked the community page as shared outside Tolgee. */
+      communityShared: boolean;
+    };
+    CommunityProfileModel: {
+      /** Format: int64 */
+      accepted: number;
+      /** Format: int64 */
+      active: number;
+      avatar?: components["schemas"]["Avatar"];
+      buckets: components["schemas"]["Bucket"][];
+      /** Format: int64 */
+      contributions: number;
+      /** Format: int64 */
+      declined: number;
+      /** Format: int64 */
+      id: number;
+      languages: components["schemas"]["ProfileLanguage"][];
+      name?: string;
+      projects: components["schemas"]["ProfileProject"][];
+      /** Format: int64 */
+      suggested: number;
+    };
     ComplexEditKeyDto: {
       /** @description Branch of the key. If not provided, default branch will be used */
       branch?: string;
@@ -2192,7 +2562,8 @@ export interface components {
         | "NONE"
         | "SERVER_ADMIN"
         | "SERVER_SUPPORTER"
-        | "COMMUNITY";
+        | "COMMUNITY"
+        | "GUEST";
       permissionModel?: components["schemas"]["PermissionModel"];
       /**
        * @deprecated
@@ -2223,6 +2594,7 @@ export interface components {
         | "screenshots.delete"
         | "screenshots.view"
         | "activity.view"
+        | "activity-contributions.view"
         | "languages.edit"
         | "admin"
         | "project.edit"
@@ -2599,13 +2971,13 @@ export interface components {
     };
     ContributorModel: {
       avatar?: components["schemas"]["Avatar"];
-      /** Format: date-time */
-      firstContributionAt: string;
+      /** Format: int64 */
+      firstContributionAt: number;
       /** Format: int64 */
       id: number;
       invitationPending: boolean;
-      /** Format: date-time */
-      lastContributionAt: string;
+      /** Format: int64 */
+      lastContributionAt: number;
       name?: string;
       username: string;
     };
@@ -2922,10 +3294,11 @@ export interface components {
         | "BRANCHING"
         | "QA_CHECKS"
         | "TRANSLATION_MEMORY"
+        | "AI_REVIEW"
       )[];
       isPayAsYouGo: boolean;
-      /** Format: date-time */
-      lastValidCheck?: string;
+      /** Format: int64 */
+      lastValidCheck?: number;
       licenseKey: string;
       name: string;
       nonCommerical: boolean;
@@ -3289,7 +3662,16 @@ export interface components {
         | "suggestions_disabled"
         | "project_storage_invalid_field_name"
         | "project_storage_value_too_large"
-        | "project_storage_too_many_fields";
+        | "project_storage_too_many_fields"
+        | "ai_review_rule_not_found"
+        | "ai_review_prompt_must_be_review_type"
+        | "ai_review_rule_base_language"
+        | "ai_review_not_an_approval"
+        | "ai_review_nothing_to_review"
+        | "ai_review_disabled"
+        | "prompt_type_cannot_be_changed"
+        | "review_prompt_cannot_translate"
+        | "community_profile_private";
       params?: { [key: string]: unknown }[];
     };
     ExistenceEntityDescription: {
@@ -3531,6 +3913,7 @@ export interface components {
         | "screenshots.delete"
         | "screenshots.view"
         | "activity.view"
+        | "activity-contributions.view"
         | "languages.edit"
         | "admin"
         | "project.edit"
@@ -3833,7 +4216,10 @@ export interface components {
       announcement?: components["schemas"]["AnnouncementDto"];
       authInfo?: components["schemas"]["AuthInfoModel"];
       eeSubscription?: components["schemas"]["InitialDataEeSubscriptionModel"];
+      /** @description Whether the user has contributed to a community (public) project they are not a member of. Drives the "Community projects" entry in the organization switcher. */
       hasCommunityContributions: boolean;
+      /** @description Whether the user has at least one counted contribution in a community (public) project, as a member or not. This is the rule that makes a community profile visible by default. */
+      hasPublicContribution: boolean;
       languageTag?: string;
       /** @enum {string} */
       onboardingSurveyVersion?: "default_v1" | "invited_v1";
@@ -3852,7 +4238,10 @@ export interface components {
       status: "PENDING" | "RUNNING" | "SUCCESS" | "FAILED" | "CANCELLED";
       /** @enum {string} */
       type:
+        | "AI_REVIEW"
+        | "AI_REVIEW_DEMOTION"
         | "AI_PLAYGROUND_TRANSLATE"
+        | "AI_PLAYGROUND_REVIEW"
         | "PRE_TRANSLATE_BT_TM"
         | "MACHINE_TRANSLATE"
         | "AUTO_TRANSLATE"
@@ -4033,8 +4422,8 @@ export interface components {
     };
     KeySearchResultView: {
       baseTranslation?: string;
-      /** Format: date-time */
-      deletedAt?: string;
+      /** Format: int64 */
+      deletedAt?: number;
       deletedByUserAvatarHash?: string;
       deletedByUserDeleted?: boolean;
       /** Format: int64 */
@@ -4051,8 +4440,8 @@ export interface components {
     };
     KeySearchSearchResultModel: {
       baseTranslation?: string;
-      /** Format: date-time */
-      deletedAt?: string;
+      /** Format: int64 */
+      deletedAt?: number;
       deletedByUserAvatarHash?: string;
       deletedByUserDeleted?: boolean;
       /** Format: int64 */
@@ -4328,6 +4717,18 @@ export interface components {
       /** @description When null, its a default configuration applied to not configured languages */
       targetLanguageTag?: string;
     };
+    LanguageCounts: {
+      /** Format: int64 */
+      accepted: number;
+      /** Format: int64 */
+      contributions: number;
+      /** Format: int64 */
+      declined: number;
+      /** Format: int64 */
+      languageId: number;
+      /** Format: int64 */
+      suggested: number;
+    };
     LanguageInfoModel: {
       /** Format: int64 */
       languageId?: number;
@@ -4436,8 +4837,8 @@ export interface components {
       translatedPercentage: number;
       /** Format: int64 */
       translatedWordCount: number;
-      /** Format: date-time */
-      translationsUpdatedAt?: string;
+      /** Format: int64 */
+      translationsUpdatedAt?: number;
       /** Format: int64 */
       untranslatedKeyCount: number;
       /** Format: double */
@@ -4585,8 +4986,8 @@ export interface components {
       name: string;
     };
     NotificationModel: {
-      /** Format: date-time */
-      createdAt?: string;
+      /** Format: int64 */
+      createdAt?: number;
       /** Format: int64 */
       id: number;
       linkedTask?: components["schemas"]["TaskModel"];
@@ -4697,8 +5098,8 @@ export interface components {
     };
     OrganizationInvitationModel: {
       code: string;
-      /** Format: date-time */
-      createdAt: string;
+      /** Format: int64 */
+      createdAt: number;
       createdBy?: components["schemas"]["SimpleUserAccountModel"];
       /** Format: int64 */
       id: number;
@@ -4814,6 +5215,18 @@ export interface components {
     PagedModelBranchModel: {
       _embedded?: {
         branches?: components["schemas"]["BranchModel"][];
+      };
+      page?: components["schemas"]["PageMetadata"];
+    };
+    PagedModelCommunityActivityModel: {
+      _embedded?: {
+        activities?: components["schemas"]["CommunityActivityModel"][];
+      };
+      page?: components["schemas"]["PageMetadata"];
+    };
+    PagedModelCommunityContributorModel: {
+      _embedded?: {
+        contributors?: components["schemas"]["CommunityContributorModel"][];
       };
       page?: components["schemas"]["PageMetadata"];
     };
@@ -5132,6 +5545,7 @@ export interface components {
         | "screenshots.delete"
         | "screenshots.view"
         | "activity.view"
+        | "activity-contributions.view"
         | "languages.edit"
         | "admin"
         | "project.edit"
@@ -5240,6 +5654,7 @@ export interface components {
         | "screenshots.delete"
         | "screenshots.view"
         | "activity.view"
+        | "activity-contributions.view"
         | "languages.edit"
         | "admin"
         | "project.edit"
@@ -5397,6 +5812,7 @@ export interface components {
         | "BRANCHING"
         | "QA_CHECKS"
         | "TRANSLATION_MEMORY"
+        | "AI_REVIEW"
       )[];
       /** Format: int64 */
       id: number;
@@ -5427,6 +5843,8 @@ export interface components {
       name?: string;
       needsSuperJwtToken: boolean;
       /** @enum {string} */
+      profileVisibility: "PUBLIC" | "PRIVATE" | "DEFAULT";
+      /** @enum {string} */
       thirdPartyAuthType?:
         | "GOOGLE"
         | "GITHUB"
@@ -5434,6 +5852,38 @@ export interface components {
         | "SSO"
         | "SSO_GLOBAL";
       username: string;
+    };
+    ProfileLanguage: {
+      /** Format: int64 */
+      accepted: number;
+      /** Format: int64 */
+      contributions: number;
+      /** Format: int64 */
+      declined: number;
+      name: string;
+      /** Format: int64 */
+      suggested: number;
+      tag: string;
+    };
+    ProfileProject: {
+      /** Format: int64 */
+      accepted: number;
+      /** Format: int64 */
+      active: number;
+      avatar?: components["schemas"]["Avatar"];
+      /** Format: int64 */
+      contributions: number;
+      /** Format: int64 */
+      declined: number;
+      /** Format: int64 */
+      firstContributionAt?: number;
+      /** Format: int64 */
+      id: number;
+      /** Format: int64 */
+      lastContributionAt?: number;
+      name: string;
+      /** Format: int64 */
+      suggested: number;
     };
     ProjectActivityAuthorModel: {
       avatar?: components["schemas"]["Avatar"];
@@ -5453,6 +5903,8 @@ export interface components {
       params?: { [key: string]: unknown };
       /** Format: int64 */
       revisionId: number;
+      /** @enum {string} */
+      systemActor?: "AI_REVIEWER";
       /** Format: int64 */
       timestamp: number;
       /** @enum {string} */
@@ -5551,6 +6003,13 @@ export interface components {
         | "AI_PROMPT_CREATE"
         | "AI_PROMPT_UPDATE"
         | "AI_PROMPT_DELETE"
+        | "AI_REVIEW_SETTINGS_UPDATE"
+        | "AI_REVIEW_ENABLED_UPDATE"
+        | "AI_REVIEW_RULE_CREATE"
+        | "AI_REVIEW_RULE_UPDATE"
+        | "AI_REVIEW_RULE_DELETE"
+        | "AI_REVIEW"
+        | "AI_REVIEW_DEMOTION"
         | "BRANCH_CREATE"
         | "BRANCH_RENAME"
         | "BRANCH_DELETE"
@@ -5585,8 +6044,8 @@ export interface components {
     };
     ProjectInvitationModel: {
       code?: string;
-      /** Format: date-time */
-      createdAt: string;
+      /** Format: int64 */
+      createdAt: number;
       createdBy?: components["schemas"]["SimpleUserAccountModel"];
       /** Format: int64 */
       id: number;
@@ -5656,7 +6115,19 @@ export interface components {
     ProjectModel: {
       avatar?: components["schemas"]["Avatar"];
       baseLanguage?: components["schemas"]["LanguageModel"];
+      /** @description Link to the app that supports in-context translation, http or https. */
+      communityAppUrl?: string;
+      /** @description Markdown shown on the community page. Null means the project has none. */
+      communityDescription?: string;
+      /** @description Markdown on how to contribute, shown on the community page. Null means the default text. */
+      communityGuidelines?: string;
+      /** @description Whether the community page tells visitors that the app supports in-context translation. */
+      communityInContext: boolean;
+      /** @description Whether the owner marked the community page as shared outside Tolgee. */
+      communityShared: boolean;
       computedPermission: components["schemas"]["ComputedPermissionModel"];
+      /** Format: int64 */
+      createdAt?: number;
       defaultNamespace?: components["schemas"]["NamespaceModel"];
       description?: string;
       directPermission?: components["schemas"]["PermissionModel"];
@@ -5681,6 +6152,8 @@ export interface components {
        * @enum {string}
        */
       translationProtection: "NONE" | "PROTECT_REVIEWED";
+      /** @description Whether AI review runs in this project */
+      useAiReview: boolean;
       useBranching: boolean;
       useNamespaces: boolean;
       useQaChecks: boolean;
@@ -5778,8 +6251,12 @@ export interface components {
       name: string;
       providerName: string;
       template?: string;
+      /** @enum {string} */
+      type: "TRANSLATE" | "REVIEW";
     };
     PromptModel: {
+      /** Format: int64 */
+      activeRuleCount: number;
       basicPromptOptions?: (
         | "KEY_NAME"
         | "KEY_DESCRIPTION"
@@ -5796,14 +6273,21 @@ export interface components {
       /** Format: int64 */
       projectId: number;
       providerName: string;
+      /** Format: int32 */
+      revision: number;
       template?: string;
+      /** @enum {string} */
+      type: "TRANSLATE" | "REVIEW";
     };
     PromptResponseModel: {
+      issues?: components["schemas"]["AiReviewIssueModel"][];
       parsedJson?: components["schemas"]["JsonNode"];
       /** Format: int32 */
       price?: number;
       prompt: string;
       result: string;
+      /** Format: int32 */
+      score?: number;
       usage?: components["schemas"]["PromptResponseUsageModel"];
     };
     PromptResponseUsageModel: {
@@ -5831,6 +6315,8 @@ export interface components {
       /** Format: int64 */
       targetLanguageId: number;
       template?: string;
+      /** @enum {string} */
+      type: "TRANSLATE" | "REVIEW";
     };
     PromptVariableDto: {
       description?: string;
@@ -5841,7 +6327,6 @@ export interface components {
       type: "FRAGMENT" | "OBJECT" | "STRING";
       value?: string;
     };
-    /** @description Modified fields */
     PropertyModification: {
       new?: { [key: string]: unknown };
       old?: { [key: string]: unknown };
@@ -5851,8 +6336,8 @@ export interface components {
       minUsageInvoiceAmount?: number;
     };
     PublicCloudPlanModel: {
-      /** Format: date-time */
-      archivedAt?: string;
+      /** Format: int64 */
+      archivedAt?: number;
       enabledFeatures: (
         | "GRANULAR_PERMISSIONS"
         | "PRIORITIZED_FEATURE_REQUESTS"
@@ -5877,6 +6362,7 @@ export interface components {
         | "BRANCHING"
         | "QA_CHECKS"
         | "TRANSLATION_MEMORY"
+        | "AI_REVIEW"
       )[];
       free: boolean;
       /** Format: int64 */
@@ -6413,8 +6899,8 @@ export interface components {
     };
     /** @description Screenshots of the key */
     ScreenshotModel: {
-      /** Format: date-time */
-      createdAt?: string;
+      /** Format: int64 */
+      createdAt?: number;
       fileUrl: string;
       /**
        * @description File name, which may be downloaded from the screenshot path.
@@ -6444,8 +6930,8 @@ export interface components {
       ids: number[];
     };
     SelfHostedEePlanModel: {
-      /** Format: date-time */
-      archivedAt?: string;
+      /** Format: int64 */
+      archivedAt?: number;
       enabledFeatures: (
         | "GRANULAR_PERMISSIONS"
         | "PRIORITIZED_FEATURE_REQUESTS"
@@ -6470,6 +6956,7 @@ export interface components {
         | "BRANCHING"
         | "QA_CHECKS"
         | "TRANSLATION_MEMORY"
+        | "AI_REVIEW"
       )[];
       free: boolean;
       hasYearlyPrice: boolean;
@@ -6877,6 +7364,24 @@ export interface components {
       slackRealName?: string;
       teamName: string;
     };
+    SourceChangeSettingsModel: {
+      /** @enum {string} */
+      aiApproved: "RETRANSLATE" | "MARK_OUTDATED";
+      aiApprovedLocked: boolean;
+      /** @enum {string} */
+      humanEdited: "RETRANSLATE" | "MARK_OUTDATED";
+      /** @enum {string} */
+      humanReviewed: "RETRANSLATE" | "MARK_OUTDATED";
+      humanReviewedLocked: boolean;
+    };
+    SourceChangeSettingsRequest: {
+      /** @enum {string} */
+      aiApproved: "RETRANSLATE" | "MARK_OUTDATED";
+      /** @enum {string} */
+      humanEdited: "RETRANSLATE" | "MARK_OUTDATED";
+      /** @enum {string} */
+      humanReviewed: "RETRANSLATE" | "MARK_OUTDATED";
+    };
     SsoGlobalPublicConfigDTO: {
       clientId?: string;
       customLoginText?: string;
@@ -7239,7 +7744,16 @@ export interface components {
         | "suggestions_disabled"
         | "project_storage_invalid_field_name"
         | "project_storage_value_too_large"
-        | "project_storage_too_many_fields";
+        | "project_storage_too_many_fields"
+        | "ai_review_rule_not_found"
+        | "ai_review_prompt_must_be_review_type"
+        | "ai_review_rule_base_language"
+        | "ai_review_not_an_approval"
+        | "ai_review_nothing_to_review"
+        | "ai_review_disabled"
+        | "prompt_type_cannot_be_changed"
+        | "review_prompt_cannot_translate"
+        | "community_profile_private";
       params?: { [key: string]: unknown }[];
       success: boolean;
     };
@@ -7451,6 +7965,69 @@ export interface components {
       name: string;
       url?: string;
     };
+    TranslationAiReviewModel: {
+      /** @enum {string} */
+      failureReason?:
+        | "NO_PROVIDER"
+        | "PROVIDER_ERROR"
+        | "OUT_OF_CREDITS"
+        | "TEMPLATE_ERROR"
+        | "PARSE_ERROR";
+      issues: components["schemas"]["AiReviewIssueModel"][];
+      /** Format: int64 */
+      lastFailedAt?: number;
+      /** @enum {string} */
+      lastFailureReason?:
+        | "NO_PROVIDER"
+        | "PROVIDER_ERROR"
+        | "OUT_OF_CREDITS"
+        | "TEMPLATE_ERROR"
+        | "PARSE_ERROR";
+      model?: string;
+      promptName?: string;
+      providerName?: string;
+      /** Format: int64 */
+      resolvedAt?: number;
+      resolvedBy?: components["schemas"]["SimpleUserAccountModel"];
+      /** Format: int64 */
+      reviewedAt?: number;
+      /** Format: int64 */
+      ruleId?: number;
+      ruleName?: string;
+      /** Format: int32 */
+      score?: number;
+      scoreOnlyRun: boolean;
+      /** @enum {string} */
+      status:
+        | "PENDING"
+        | "APPROVED"
+        | "BELOW_THRESHOLD"
+        | "SCORE_ONLY_PASS"
+        | "SCORE_ONLY_FAIL"
+        | "FAILED"
+        | "SKIPPED_QA_ISSUES"
+        | "OVERRIDDEN";
+      /** Format: int32 */
+      threshold?: number;
+    };
+    /** @description AI review result for the current text. Null without a current result or the feature. */
+    TranslationAiReviewSummaryModel: {
+      lastFailed: boolean;
+      queued: boolean;
+      /** Format: int32 */
+      score?: number;
+      scoreOnlyRun: boolean;
+      /** @enum {string} */
+      status:
+        | "PENDING"
+        | "APPROVED"
+        | "BELOW_THRESHOLD"
+        | "SCORE_ONLY_PASS"
+        | "SCORE_ONLY_FAIL"
+        | "FAILED"
+        | "SKIPPED_QA_ISSUES"
+        | "OVERRIDDEN";
+    };
     TranslationCommentDto: {
       /** @enum {string} */
       state: "RESOLUTION_NOT_NEEDED" | "NEEDS_RESOLUTION" | "RESOLVED";
@@ -7459,10 +8036,10 @@ export interface components {
     TranslationCommentModel: {
       author: components["schemas"]["SimpleUserAccountModel"];
       /**
-       * Format: date-time
+       * Format: int64
        * @description Date when it was created
        */
-      createdAt: string;
+      createdAt: number;
       /**
        * Format: int64
        * @description Id of translation comment record
@@ -7476,10 +8053,10 @@ export interface components {
       /** @description Text of comment */
       text: string;
       /**
-       * Format: date-time
+       * Format: int64
        * @description Date when it was updated
        */
-      updatedAt: string;
+      updatedAt: number;
     };
     TranslationCommentWithLangKeyDto: {
       /** Format: int64 */
@@ -7498,6 +8075,11 @@ export interface components {
       };
       /** @enum {string} */
       revisionType: "ADD" | "MOD" | "DEL";
+      /**
+       * @description System actor of the change, when the platform itself made it
+       * @enum {string}
+       */
+      systemActor?: "AI_REVIEWER";
       /**
        * Format: int64
        * @description Unix timestamp of the revision
@@ -7588,8 +8170,8 @@ export interface components {
       similarity: number;
       targetText: string;
       translationMemoryName?: string;
-      /** Format: date-time */
-      updatedAt?: string;
+      /** Format: int64 */
+      updatedAt?: number;
     };
     TranslationMemoryModel: {
       /**
@@ -7713,8 +8295,8 @@ export interface components {
     };
     TranslationSuggestionModel: {
       author: components["schemas"]["SimpleUserAccountModel"];
-      /** Format: date-time */
-      createdAt: string;
+      /** Format: int64 */
+      createdAt: number;
       /** Format: int64 */
       id: number;
       isPlural: boolean;
@@ -7725,8 +8307,8 @@ export interface components {
       /** @enum {string} */
       state: "ACTIVE" | "ACCEPTED" | "DECLINED";
       translation?: string;
-      /** Format: date-time */
-      updatedAt: string;
+      /** Format: int64 */
+      updatedAt: number;
     };
     /** @description First suggestion */
     TranslationSuggestionSimpleModel: {
@@ -7756,6 +8338,7 @@ export interface components {
        * @description Number of active suggestions
        */
       activeSuggestionCount: number;
+      aiReview?: components["schemas"]["TranslationAiReviewSummaryModel"];
       /** @description Was translated using Translation Memory or Machine translation service? */
       auto: boolean;
       /**
@@ -7814,10 +8397,10 @@ export interface components {
     };
     TrashedKeyWithTranslationsModel: {
       /**
-       * Format: date-time
+       * Format: int64
        * @description When the key was deleted
        */
-      deletedAt: string;
+      deletedAt: number;
       deletedBy?: components["schemas"]["SimpleUserAccountModel"];
       /** @description Description of the key */
       description?: string;
@@ -7839,10 +8422,10 @@ export interface components {
        */
       namespace?: string;
       /**
-       * Format: date-time
+       * Format: int64
        * @description When the key will be permanently deleted
        */
-      permanentDeleteAt: string;
+      permanentDeleteAt: number;
       /** @description Screenshots of the key */
       screenshots: components["schemas"]["ScreenshotModel"][];
       /** @description Tags of key */
@@ -7948,8 +8531,8 @@ export interface components {
       name?: string;
     };
     UploadedImageModel: {
-      /** Format: date-time */
-      createdAt: string;
+      /** Format: int64 */
+      createdAt: number;
       fileUrl: string;
       filename: string;
       /** Format: int64 */
@@ -8053,6 +8636,11 @@ export interface components {
       currentPassword?: string;
       email: string;
       name: string;
+      /**
+       * @description Who can open the user's community profile. Omitted = unchanged.
+       * @enum {string}
+       */
+      profileVisibility?: "PUBLIC" | "PRIVATE" | "DEFAULT";
     };
     V2EditApiKeyDto: {
       description?: string;
@@ -15372,7 +15960,8 @@ export interface operations {
       };
     };
   };
-  getActivity: {
+  /** With `activity-contributions.view` alone, which is what a public project gives everyone, only translation work is listed: translating, changing translation states, commenting, suggesting and edits made in the key dialog. `activity.view` lists everything. */
+  getActivity_1: {
     parameters: {
       query: {
         /** Zero-based page index (0..N) */
@@ -15686,6 +16275,455 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["SetProjectPromptCustomizationRequest"];
+      };
+    };
+  };
+  listAiReviewRules: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["CollectionModelAiReviewRuleModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  createAiReviewRule: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AiReviewRuleModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AiReviewRuleRequest"];
+      };
+    };
+  };
+  setProjectAiReviewEnabled: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: unknown;
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AiReviewRuleEnabledRequest"];
+      };
+    };
+  };
+  getAiReviewRule: {
+    parameters: {
+      path: {
+        ruleId: number;
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AiReviewRuleModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  updateAiReviewRule: {
+    parameters: {
+      path: {
+        ruleId: number;
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AiReviewRuleModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AiReviewRuleRequest"];
+      };
+    };
+  };
+  deleteAiReviewRule: {
+    parameters: {
+      path: {
+        ruleId: number;
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: unknown;
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  setAiReviewRuleEnabled: {
+    parameters: {
+      path: {
+        ruleId: number;
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AiReviewRuleModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AiReviewRuleEnabledRequest"];
+      };
+    };
+  };
+  startAiReviewRun: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["BatchJobModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AiReviewRunRequest"];
+      };
+    };
+  };
+  previewAiReviewRun: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["AiReviewRunPreviewModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AiReviewRunRequest"];
       };
     };
   };
@@ -17106,6 +18144,240 @@ export interface operations {
       };
     };
   };
+  /** Sets the texts and flags shown on the project's community page. All fields are replaced: a missing or empty text clears it. The settings stay when the project is closed to the community. Only the organization owner or a server admin can change them. */
+  setCommunityPage: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["ProjectModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CommunityPageRequest"];
+      };
+    };
+  };
+  /** Counts of contributions, suggestions, and accepted and declined suggestions for each day or week of the range, oldest first, with zeros where nothing happened. Also two exact counts of translations, where a translation is one key in one language: `translationsWithAnySuggestion` counts the translations that received a suggestion within the range, and `translationsWithPendingSuggestion` counts those of them that still have a pending suggestion. A pending suggestion created before the range is not counted. By default, the range is the 12 weeks ending with the week of `to` (today, unless given). By default there is one bucket per week. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. The counts of contributions, suggestions, and accepted and declined suggestions are approximate: they come from the activity log and never go down, so a suggestion made in one period and accepted or declined in a later one counts in both. The two translation counts are exact: they are read from the suggestions as they are now. */
+  getActivity: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+      query: {
+        /** One bucket per day (`DAY`) or one per week starting on Monday (`WEEK`). */
+        granularity?: "DAY" | "WEEK";
+        /** First day of the range, as an ISO date, included. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. */
+        from?: string;
+        /** Last day of the range, as an ISO date, included. Defaults to today. A `to` before 1970-01-01 or more than a year after today is moved to that bound. */
+        to?: string;
+        /** Count only these languages, in the buckets and in both translation counts. */
+        languageIds?: number[];
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["CommunityActivityStatsModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  /** Users who worked on translations in the project within the range: translating, changing translation states, commenting, suggesting, and accepting or declining suggestions. For each user: the number of contributions, suggestions, accepted and declined suggestions and the counts per language, all within the range. The dates of the first and last contribution are not limited by the range or the languages: they cover the user's whole history in the project. By default, the range is the 12 weeks ending with the week of `to` (today, unless given). The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. The counts of contributions, suggestions, and accepted and declined suggestions are approximate: they come from the activity log and never go down, so a suggestion made in one period and accepted or declined in a later one counts in both. `active` is exact: the number of the user's suggestions that are pending right now. Sort by contributions, suggested, accepted, declined, active or lastContributionAt; users without a lastContributionAt come last. By default, most contributions come first, then most suggestions. */
+  getContributors_1: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+      query: {
+        /** Zero-based page index (0..N) */
+        page?: number;
+        /** The size of the page to be returned */
+        size?: number;
+        /** Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+        /** First day of the range, as an ISO date, included. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. */
+        from?: string;
+        /** Last day of the range, as an ISO date, included. Defaults to today. A `to` before 1970-01-01 or more than a year after today is moved to that bound. */
+        to?: string;
+        /** Count only these languages. Users with no contributions in them within the range are left out. The filter also applies to the totals, the counts per language and `active`. */
+        languageIds?: number[];
+        /** Leave out contributors with no suggestion in the range. */
+        withSuggestionsOnly?: boolean;
+        /** Only users whose name contains this text, ignoring case. */
+        search?: string;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PagedModelCommunityContributorModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  /** One user of the contributors list, with the same counts and languages. The dates of the first and last contribution are not limited by the range or the languages: they cover the user's whole history in the project. Without `from`, the counts and languages cover the user's whole history in the project up to `to` (today, unless given). With `from`, the range works as on the list: The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. The counts of contributions, suggestions, and accepted and declined suggestions are approximate: they come from the activity log and never go down, so a suggestion made in one period and accepted or declined in a later one counts in both. `active` is exact: the number of the user's suggestions that are pending right now. Returns 404 when the user has no contributions in the project within the range and languages, or the account is deleted or disabled. */
+  getContributor: {
+    parameters: {
+      path: {
+        projectId: number;
+        userId: number;
+      };
+      query: {
+        /** First day of the range, as an ISO date, included. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. */
+        from?: string;
+        /** Last day of the range, as an ISO date, included. Defaults to today. A `to` before 1970-01-01 or more than a year after today is moved to that bound. */
+        to?: string;
+        /** Count only these languages, in the totals, the counts per language and `active`. */
+        languageIds?: number[];
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["CommunityContributorModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
   list_2: {
     parameters: {
       query: {
@@ -17761,7 +19033,7 @@ export interface operations {
       };
     };
   };
-  /** Returns users who have activity on the project but are not currently its members. Deleted and disabled users are excluded. Sortable by lastContributionAt and firstContributionAt only; any other sort property falls back to lastContributionAt descending. */
+  /** Returns users with translation contributions on the project (translations, state changes, comments, suggestions and their moderation) who are not currently its members. Deleted and disabled users are excluded. Sortable by lastContributionAt and firstContributionAt only; any other sort property falls back to lastContributionAt descending. */
   getContributors: {
     parameters: {
       path: {
@@ -19940,6 +21212,22 @@ export interface operations {
          * A key matches if any of the selected check types is present in any of the selected languages.
          */
         filterQaCheckType?: string[];
+        /** Filter by AI review outcome. Several values combine with OR. Current results only. */
+        filterAiReviewStatus?: (
+          | "REVIEWED_BY_AI"
+          | "BELOW_THRESHOLD"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
+          | "FAILED"
+          | "OVERRIDDEN"
+          | "NOT_REVIEWED_YET"
+        )[];
+        /** Limit the AI review filter to these language tags. */
+        filterAiReviewInLang?: string[];
+        /** Filter by AI review score: HIGHER_THAN and LOWER_THAN are strict. Applies only together with filterAiReviewScore. */
+        filterAiReviewScoreMode?: "HIGHER_THAN" | "LOWER_THAN" | "EQUAL_TO";
+        /** The score (0-100) that filterAiReviewScoreMode compares against. */
+        filterAiReviewScore?: number;
         /** Filter keys whose QA checks are stale (pending recomputation) in lang. When set, only keys with at least one stale translation in any of the provided languages are returned. */
         filterQaChecksStaleInLang?: string[];
         /** Filter keys with any suggestions in lang */
@@ -20217,6 +21505,22 @@ export interface operations {
          * A key matches if any of the selected check types is present in any of the selected languages.
          */
         filterQaCheckType?: string[];
+        /** Filter by AI review outcome. Several values combine with OR. Current results only. */
+        filterAiReviewStatus?: (
+          | "REVIEWED_BY_AI"
+          | "BELOW_THRESHOLD"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
+          | "FAILED"
+          | "OVERRIDDEN"
+          | "NOT_REVIEWED_YET"
+        )[];
+        /** Limit the AI review filter to these language tags. */
+        filterAiReviewInLang?: string[];
+        /** Filter by AI review score: HIGHER_THAN and LOWER_THAN are strict. Applies only together with filterAiReviewScore. */
+        filterAiReviewScoreMode?: "HIGHER_THAN" | "LOWER_THAN" | "EQUAL_TO";
+        /** The score (0-100) that filterAiReviewScoreMode compares against. */
+        filterAiReviewScore?: number;
         /** Filter keys whose QA checks are stale (pending recomputation) in lang. When set, only keys with at least one stale translation in any of the provided languages are returned. */
         filterQaChecksStaleInLang?: string[];
         /** Filter keys with any suggestions in lang */
@@ -20538,6 +21842,22 @@ export interface operations {
          * A key matches if any of the selected check types is present in any of the selected languages.
          */
         filterQaCheckType?: string[];
+        /** Filter by AI review outcome. Several values combine with OR. Current results only. */
+        filterAiReviewStatus?: (
+          | "REVIEWED_BY_AI"
+          | "BELOW_THRESHOLD"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
+          | "FAILED"
+          | "OVERRIDDEN"
+          | "NOT_REVIEWED_YET"
+        )[];
+        /** Limit the AI review filter to these language tags. */
+        filterAiReviewInLang?: string[];
+        /** Filter by AI review score: HIGHER_THAN and LOWER_THAN are strict. Applies only together with filterAiReviewScore. */
+        filterAiReviewScoreMode?: "HIGHER_THAN" | "LOWER_THAN" | "EQUAL_TO";
+        /** The score (0-100) that filterAiReviewScoreMode compares against. */
+        filterAiReviewScore?: number;
         /** Filter keys whose QA checks are stale (pending recomputation) in lang. When set, only keys with at least one stale translation in any of the provided languages are returned. */
         filterQaChecksStaleInLang?: string[];
         /** Filter keys with any suggestions in lang */
@@ -22876,6 +24196,7 @@ export interface operations {
         /** Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
         sort?: string[];
         search?: string;
+        type?: "TRANSLATE" | "REVIEW";
       };
       path: {
         projectId: number;
@@ -22976,6 +24297,9 @@ export interface operations {
   };
   getDefaultPrompt: {
     parameters: {
+      query: {
+        type?: "TRANSLATE" | "REVIEW";
+      };
       path: {
         projectId: number;
       };
@@ -23269,7 +24593,7 @@ export interface operations {
       };
     };
   };
-  /** Marks the project as public or private. Only the organization owner or a server admin can change this. */
+  /** Marks the project as public or private. Opening a private project also turns suggestions on (`suggestionsMode` becomes `ENABLED`); closing it, or opening an already public project, leaves `suggestionsMode` as it is. Only the organization owner or a server admin can change this. */
   setProjectPublic: {
     parameters: {
       path: {
@@ -23910,6 +25234,106 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["SingleStepImportResolvableRequest"];
+      };
+    };
+  };
+  getSourceChangeSettings: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SourceChangeSettingsModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  /** The setting decides whether human work is overwritten automatically later. */
+  setSourceChangeSettings: {
+    parameters: {
+      path: {
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["SourceChangeSettingsModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SourceChangeSettingsRequest"];
       };
     };
   };
@@ -24747,6 +26171,7 @@ export interface operations {
       };
     };
   };
+  /** With `activity-contributions.view` alone, only the events the project activity lists for that scope are counted. `activity.view` counts everything. */
   getProjectDailyActivity: {
     parameters: {
       path: {
@@ -26625,6 +28050,22 @@ export interface operations {
          * A key matches if any of the selected check types is present in any of the selected languages.
          */
         filterQaCheckType?: string[];
+        /** Filter by AI review outcome. Several values combine with OR. Current results only. */
+        filterAiReviewStatus?: (
+          | "REVIEWED_BY_AI"
+          | "BELOW_THRESHOLD"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
+          | "FAILED"
+          | "OVERRIDDEN"
+          | "NOT_REVIEWED_YET"
+        )[];
+        /** Limit the AI review filter to these language tags. */
+        filterAiReviewInLang?: string[];
+        /** Filter by AI review score: HIGHER_THAN and LOWER_THAN are strict. Applies only together with filterAiReviewScore. */
+        filterAiReviewScoreMode?: "HIGHER_THAN" | "LOWER_THAN" | "EQUAL_TO";
+        /** The score (0-100) that filterAiReviewScoreMode compares against. */
+        filterAiReviewScore?: number;
         /** Filter keys whose QA checks are stale (pending recomputation) in lang. When set, only keys with at least one stale translation in any of the provided languages are returned. */
         filterQaChecksStaleInLang?: string[];
         /** Filter keys with any suggestions in lang */
@@ -27114,6 +28555,22 @@ export interface operations {
          * A key matches if any of the selected check types is present in any of the selected languages.
          */
         filterQaCheckType?: string[];
+        /** Filter by AI review outcome. Several values combine with OR. Current results only. */
+        filterAiReviewStatus?: (
+          | "REVIEWED_BY_AI"
+          | "BELOW_THRESHOLD"
+          | "SCORE_ONLY_PASS"
+          | "SCORE_ONLY_FAIL"
+          | "FAILED"
+          | "OVERRIDDEN"
+          | "NOT_REVIEWED_YET"
+        )[];
+        /** Limit the AI review filter to these language tags. */
+        filterAiReviewInLang?: string[];
+        /** Filter by AI review score: HIGHER_THAN and LOWER_THAN are strict. Applies only together with filterAiReviewScore. */
+        filterAiReviewScoreMode?: "HIGHER_THAN" | "LOWER_THAN" | "EQUAL_TO";
+        /** The score (0-100) that filterAiReviewScoreMode compares against. */
+        filterAiReviewScore?: number;
         /** Filter keys whose QA checks are stale (pending recomputation) in lang. When set, only keys with at least one stale translation in any of the provided languages are returned. */
         filterQaChecksStaleInLang?: string[];
         /** Filter keys with any suggestions in lang */
@@ -27204,6 +28661,102 @@ export interface operations {
       200: {
         content: {
           "application/json": string;
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  getAiReview: {
+    parameters: {
+      path: {
+        translationId: number;
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["TranslationAiReviewModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  retryAiReview: {
+    parameters: {
+      path: {
+        translationId: number;
+        projectId: number;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["BatchJobModel"];
         };
       };
       /** Bad Request */
@@ -28959,7 +30512,7 @@ export interface operations {
       };
     };
   };
-  /** Returns all public projects (including statistics), discoverable by anyone — no authentication required */
+  /** Returns all public projects (including statistics), discoverable by anyone — no authentication required. Ordered by the key count in the base language's statistics (largest first), which can briefly lag behind the `keyCount` of each project, then by name and id; the sort parameter is ignored. */
   getAllPublicWithStatistics: {
     parameters: {
       query: {
@@ -29078,6 +30631,7 @@ export interface operations {
               | "screenshots.delete"
               | "screenshots.view"
               | "activity.view"
+              | "activity-contributions.view"
               | "languages.edit"
               | "admin"
               | "project.edit"
@@ -29196,11 +30750,6 @@ export interface operations {
         };
       };
     };
-    requestBody: {
-      content: {
-        "application/json": string;
-      };
-    };
   };
   /**
    * This is triggered when bot event is triggered. E.g., when app is uninstalled from workspace.
@@ -29254,11 +30803,6 @@ export interface operations {
         };
       };
     };
-    requestBody: {
-      content: {
-        "application/json": string;
-      };
-    };
   };
   /** This is triggered when interactivity event is triggered. E.g., when user clicks button provided in previous messages. */
   onInteractivityEvent: {
@@ -29302,11 +30846,6 @@ export interface operations {
             | components["schemas"]["ErrorResponseTyped"]
             | components["schemas"]["ErrorResponseBody"];
         };
-      };
-    };
-    requestBody: {
-      content: {
-        "application/json": string;
       };
     };
   };
@@ -30789,6 +32328,118 @@ export interface operations {
       };
       /** No SSO configuration available for this user */
       204: never;
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  /** The user's translation work in public projects, newest first; the sort parameter is ignored. Each entry has the shape of an entry in the project activity log, with the project added and the author left out. Returns 404 whenever the community profile does. */
+  getActivityFeed: {
+    parameters: {
+      path: {
+        userId: number;
+      };
+      query: {
+        /** Zero-based page index (0..N) */
+        page?: number;
+        /** The size of the page to be returned */
+        size?: number;
+        /** Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+        sort?: string[];
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["PagedModelCommunityActivityModel"];
+        };
+      };
+      /** Bad Request */
+      400: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Unauthorized */
+      401: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Forbidden */
+      403: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+      /** Not Found */
+      404: {
+        content: {
+          "application/json":
+            | components["schemas"]["ErrorResponseTyped"]
+            | components["schemas"]["ErrorResponseBody"];
+        };
+      };
+    };
+  };
+  /** The user's contribution counts, languages and the public projects they contributed to, over their whole history, plus one bucket of counts per day or week of the range. By default, the range is the 365 days ending with `to` (today, unless given), with one bucket per day. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. Only contributions to public projects count. An unknown, deleted or disabled user returns 404 `user_not_found`. A profile set to private, or one left on the default visibility by a user without contributions to public projects, returns 404 `community_profile_private`; users always see their own profile. The counts are approximate: they come from the activity log and never go down, so a suggestion made on one day and accepted or declined on a later day counts on both. `active` is exact: the number of the user's suggestions that are pending right now, in total and per project. */
+  getProfile: {
+    parameters: {
+      path: {
+        userId: number;
+      };
+      query: {
+        /** One bucket per day (`DAY`) or one per week starting on Monday (`WEEK`). */
+        granularity?: "DAY" | "WEEK";
+        /** First day of the range, as an ISO date, included. The range may cover at most 2 years; an earlier `from` is adjusted to 2 years before `to`. If `from` is after `to`, the range is just the day `to`. */
+        from?: string;
+        /** Last day of the range, as an ISO date, included. Defaults to today. A `to` before 1970-01-01 or more than a year after today is moved to that bound. */
+        to?: string;
+      };
+    };
+    responses: {
+      /** OK */
+      200: {
+        content: {
+          "application/json": components["schemas"]["CommunityProfileModel"];
+        };
+      };
       /** Bad Request */
       400: {
         content: {

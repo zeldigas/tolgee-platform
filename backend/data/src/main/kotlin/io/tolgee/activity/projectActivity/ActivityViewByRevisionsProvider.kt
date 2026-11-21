@@ -57,6 +57,7 @@ class ActivityViewByRevisionsProvider(
       val author = authors[revision.authorId]
       ProjectActivityView(
         revisionId = revision.id,
+        projectId = revision.projectId,
         timestamp = revision.timestamp.time,
         type = revision.type ?: ActivityType.UNKNOWN,
         authorId = revision.authorId,
@@ -64,6 +65,7 @@ class ActivityViewByRevisionsProvider(
         authorName = author?.name,
         authorAvatarHash = author?.avatarHash,
         authorDeleted = author?.deletedAt != null,
+        systemActor = revision.systemActor,
         meta = revision.meta,
         modifications = modifiedEntities[revision.id],
         counts = counts[revision.id],

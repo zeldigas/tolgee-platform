@@ -9,6 +9,7 @@ import io.tolgee.dtos.cacheable.LanguageDto
 import io.tolgee.dtos.cacheable.OrganizationLanguageDto
 import io.tolgee.dtos.request.LanguageRequest
 import io.tolgee.dtos.request.language.LanguageFilters
+import io.tolgee.events.OnLanguageSoftDeleted
 import io.tolgee.exceptions.NotFoundException
 import io.tolgee.model.Language
 import io.tolgee.model.Language.Companion.fromRequestDTO
@@ -99,6 +100,7 @@ class LanguageService(
     language.deletedAt = currentDateProvider.date
     importService.onExistingLanguageRemoved(language)
     permissionService.removeLanguageFromPermissions(language)
+    applicationContext.publishEvent(OnLanguageSoftDeleted(language.project.id, language.id))
     save(language)
     self.hardDeleteLanguageAsync(language, authenticationFacade.authenticatedUserOrNull?.id)
   }
@@ -182,6 +184,9 @@ class LanguageService(
     languageId: Long,
     projectId: Long,
   ): LanguageDto? {
+    self.getProjectLanguages(projectId).singleOrNull { it.id == languageId }?.let { return it }
+    languageRepository.find(languageId, projectId) ?: return null
+    cacheManager.getCache(Caches.LANGUAGES)?.evictIfPresent(projectId)
     return self.getProjectLanguages(projectId).singleOrNull { it.id == languageId }
   }
 

@@ -10,6 +10,14 @@ type QaCheckType = components['schemas']['QaIssueModel']['type'];
 
 export type TranslationStateType = StateType | 'OUTDATED' | 'AUTO_TRANSLATED';
 
+export type AiReviewFilterOutcome = NonNullable<
+  FiltersType['filterAiReviewStatus']
+>[number];
+
+export type AiReviewScoreFilterMode = NonNullable<
+  FiltersType['filterAiReviewScoreMode']
+>;
+
 export type TaskStatusFilter =
   | 'IN_OPEN_TASK'
   | 'NOT_IN_OPEN_TASK'
@@ -42,6 +50,9 @@ export type FiltersInternal = {
   filterHasComments?: boolean;
   filterQaCheckTypes?: QaCheckType[];
   filterQaChecksStale?: boolean;
+  filterAiReviewOutcomes?: AiReviewFilterOutcome[];
+  filterAiReviewScoreMode?: AiReviewScoreFilterMode;
+  filterAiReviewScore?: number;
   filterLabel?: string[];
   filterHasSuggestions?: boolean;
   filterHasNoSuggestions?: boolean;
@@ -59,16 +70,39 @@ export type FiltersInternal = {
   filterSuggestionLanguage?: true | string;
   filterTaskLanguage?: true | string;
 
-  /*
-   * this one differs from the others above
-   *
-   * Specifies which languages will be considered when filtering by the QA check type:
-   *  - undefined = all languages (default)
-   *  - false = all but base
-   *  - string = one language tag
-   */
-  filterQaCheckTypeLanguage?: false | string;
+  filterQaCheckTypeLanguage?: LanguageScope;
+  filterAiReviewOutcomeLanguage?: LanguageScope;
 };
+
+/** Unlike above: undefined = all languages, false = all but base, string = one language tag. */
+type LanguageScope = false | string;
+
+export function aiReviewScoreFilterActive(value: FiltersInternal) {
+  return (
+    value.filterAiReviewScoreMode !== undefined &&
+    value.filterAiReviewScore !== undefined
+  );
+}
+
+export function withoutAiReviewScoreFilter(
+  value: FiltersInternal
+): FiltersInternal {
+  return {
+    ...value,
+    filterAiReviewScoreMode: undefined,
+    filterAiReviewScore: undefined,
+  };
+}
+
+export function withoutNotReviewedYet(value: FiltersInternal): FiltersInternal {
+  const outcomes = value.filterAiReviewOutcomes?.filter(
+    (outcome) => outcome !== 'NOT_REVIEWED_YET'
+  );
+  return {
+    ...value,
+    filterAiReviewOutcomes: outcomes?.length ? outcomes : undefined,
+  };
+}
 
 export type AddParams =
   | ['filterTag', string]
@@ -86,6 +120,7 @@ export type AddParams =
   | ['filterHasComments']
   | ['filterQaCheckTypes', QaCheckType]
   | ['filterQaChecksStale']
+  | ['filterAiReviewOutcomes', AiReviewFilterOutcome]
   | ['filterLabel', string]
   | ['filterHasSuggestions']
   | ['filterHasNoSuggestions']

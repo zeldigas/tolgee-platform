@@ -29,6 +29,8 @@ import io.tolgee.model.UserPreferences
 import io.tolgee.model.activity.ActivityDescribingEntity
 import io.tolgee.model.activity.ActivityModifiedEntity
 import io.tolgee.model.activity.ActivityRevision
+import io.tolgee.model.aiReview.AiReviewRule
+import io.tolgee.model.aiReview.TranslationAiReview
 import io.tolgee.model.automations.Automation
 import io.tolgee.model.automations.AutomationAction
 import io.tolgee.model.automations.AutomationTrigger
@@ -44,6 +46,7 @@ import io.tolgee.model.contentDelivery.AzureContentStorageConfig
 import io.tolgee.model.contentDelivery.ContentDeliveryConfig
 import io.tolgee.model.contentDelivery.ContentStorage
 import io.tolgee.model.contentDelivery.S3ContentStorageConfig
+import io.tolgee.model.contributor.CommunityContributionDay
 import io.tolgee.model.contributor.ProjectContributor
 import io.tolgee.model.dataImport.Import
 import io.tolgee.model.dataImport.ImportFile
@@ -150,6 +153,7 @@ object ProjectExportImportPolicyRegistry {
         ActivityModifiedEntity::class,
         ActivityDescribingEntity::class,
         ProjectContributor::class,
+        CommunityContributionDay::class,
         BranchMerge::class,
         BranchMergeChange::class,
         LanguageStats::class,
@@ -157,6 +161,8 @@ object ProjectExportImportPolicyRegistry {
         MtServiceConfig::class,
         Prompt::class,
         AiPlaygroundResult::class,
+        AiReviewRule::class,
+        TranslationAiReview::class,
         MtCreditBucket::class,
         LlmProvider::class,
         BatchJob::class,

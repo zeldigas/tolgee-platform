@@ -229,6 +229,7 @@ class UserAccountService(
     toDelete.emailVerification?.let {
       entityManager.remove(it)
     }
+    toDelete.emailVerification = null
     toDelete.apiKeys?.forEach {
       entityManager.remove(it)
     }
@@ -551,6 +552,7 @@ class UserAccountService(
     val old = UserAccountDto.fromEntity(userAccount)
     updateUserEmail(userAccount, dto, request)
     userAccount.name = dto.name
+    dto.profileVisibility?.let { userAccount.profileVisibility = it }
 
     publishUserInfoUpdatedEvent(old, userAccount)
     return userAccountRepository.save(userAccount)

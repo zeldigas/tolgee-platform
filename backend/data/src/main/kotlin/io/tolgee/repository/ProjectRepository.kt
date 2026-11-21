@@ -21,9 +21,16 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         r.useNamespaces as useNamespaces,
         r.useBranching as useBranching,
         r.useQaChecks as useQaChecks,
+        r.useAiReview as useAiReview,
         r.public as public,
         r.suggestionsMode as suggestionsMode,
         r.translationProtection as translationProtection,
+        r.communityDescription as communityDescription,
+        r.communityGuidelines as communityGuidelines,
+        r.communityShared as communityShared,
+        r.communityInContext as communityInContext,
+        r.communityAppUrl as communityAppUrl,
+        r.createdAt as createdAt,
         dn as defaultNamespace, o as organizationOwner,
         role.type as organizationRole, p as directPermission, r.icuPlaceholders as icuPlaceholders
         from Project r
@@ -55,6 +62,15 @@ interface ProjectRepository : JpaRepository<Project, Long> {
         r.public = true and r.deletedAt is null and r.organizationOwner is not null
         and r.baseLanguage is not null and bl.deletedAt is null
         and o.deletedAt is null
+        """
+
+    /** `max`: a base language can carry a stats row for the default branch and one without a branch. */
+    const val PUBLIC_PROJECT_ORDER = """
+        order by coalesce((
+          select max(ls.untranslatedKeys + ls.translatedKeys + ls.reviewedKeys)
+          from LanguageStats ls left join ls.branch b
+          where ls.language = bl and (b is null or b.isDefault = true)
+        ), 0) desc, r.name asc, r.id asc
         """
 
     const val NON_MEMBER_FILTER = """
@@ -148,6 +164,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
             :search is null or (lower(r.name) like lower(concat('%', cast(:search as text), '%'))
             or lower(o.name) like lower(concat('%', cast(:search as text),'%')))
         )
+        $PUBLIC_PROJECT_ORDER
     """,
   )
   fun findAllPublic(
@@ -164,6 +181,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
             or lower(o.name) like lower(concat('%', cast(:search as text),'%')))
         )
         and ($NON_MEMBER_CONTRIBUTOR_FILTER)
+        $PUBLIC_PROJECT_ORDER
     """,
   )
   fun findAllPublicContributed(

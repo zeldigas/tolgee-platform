@@ -1,7 +1,12 @@
 import { useRef } from 'react';
 
 import { exhaustiveMatchingGuard } from 'tg.fixtures/exhaustiveMatchingGuard';
-import { AddParams, FiltersInternal, FiltersType } from './tools';
+import {
+  AddParams,
+  aiReviewScoreFilterActive,
+  FiltersInternal,
+  FiltersType,
+} from 'tg.views/projects/translations/TranslationFilters/tools';
 
 function remove<T extends string | number>(list: T[] | undefined, value: T) {
   const result = list?.filter((i) => i !== value) || [];
@@ -17,6 +22,7 @@ const LANGUAGE_SCOPES = [
   'filterSuggestionLanguage',
   'filterTaskLanguage',
   'filterQaCheckTypeLanguage',
+  'filterAiReviewOutcomeLanguage',
 ] as const satisfies readonly (keyof FiltersInternal)[];
 
 /**
@@ -164,6 +170,11 @@ export const useTranslationFilters = ({
           ...filters,
           filterQaChecksStale: true,
         });
+      case 'filterAiReviewOutcomes':
+        return setFilters({
+          ...filters,
+          filterAiReviewOutcomes: add(filters.filterAiReviewOutcomes, value),
+        });
       case 'filterLabel':
         return setFilters({
           ...filters,
@@ -269,6 +280,11 @@ export const useTranslationFilters = ({
           ...filters,
           filterQaChecksStale: undefined,
         });
+      case 'filterAiReviewOutcomes':
+        return setFilters({
+          ...filters,
+          filterAiReviewOutcomes: remove(filters.filterAiReviewOutcomes, value),
+        });
       case 'filterLabel':
         return setFilters({
           ...filters,
@@ -363,6 +379,30 @@ export const useTranslationFilters = ({
           );
         });
       });
+
+    const aiReviewScoreSet = aiReviewScoreFilterActive(filters);
+    if (filters.filterAiReviewOutcomes?.length || aiReviewScoreSet) {
+      const aiReviewLanguages = selectedLanguages.filter((tag) => {
+        switch (filters.filterAiReviewOutcomeLanguage) {
+          case undefined:
+            return true;
+          case false:
+            return tag !== baseLang;
+          default:
+            return tag === filters.filterAiReviewOutcomeLanguage;
+        }
+      });
+      if (filters.filterAiReviewOutcomes?.length) {
+        filtersQuery.filterAiReviewStatus = filters.filterAiReviewOutcomes;
+      }
+      if (aiReviewScoreSet) {
+        filtersQuery.filterAiReviewScoreMode = filters.filterAiReviewScoreMode;
+        filtersQuery.filterAiReviewScore = filters.filterAiReviewScore;
+      }
+      if (aiReviewLanguages.length) {
+        filtersQuery.filterAiReviewInLang = aiReviewLanguages;
+      }
+    }
     selectedLanguages
       .filter(inLanguageScope(filters.filterTranslationLanguage))
       .forEach((tag) => {

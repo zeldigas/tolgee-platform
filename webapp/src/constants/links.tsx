@@ -124,6 +124,11 @@ export class LINKS {
 
   static USER_SETTINGS = Link.ofRoot('account');
 
+  static USER_COMMUNITY_PROFILE = Link.ofParent(
+    Link.ofRoot('users'),
+    p(PARAMS.USER_ID)
+  );
+
   static USER_ACCOUNT_NOTIFICATIONS = Link.ofParent(
     LINKS.USER_SETTINGS,
     'notifications'
@@ -369,11 +374,20 @@ export class LINKS {
 
   static PROJECT_DASHBOARD = LINKS.PROJECT;
 
+  static PROJECT_COMMUNITY = Link.ofParent(LINKS.PROJECT, 'community');
+
+  static PROJECT_COMMUNITY_CONTRIBUTORS = Link.ofParent(
+    LINKS.PROJECT_COMMUNITY,
+    'contributors'
+  );
+
   static PROJECT_AI = Link.ofParent(LINKS.PROJECT, 'ai');
 
   static PROJECT_CONTEXT_DATA = Link.ofParent(LINKS.PROJECT_AI, 'context-data');
 
   static PROJECT_AI_PROMPTS = Link.ofParent(LINKS.PROJECT_AI, 'prompts');
+
+  static PROJECT_AI_REVIEW = Link.ofParent(LINKS.PROJECT_AI, 'review');
 
   static PROJECT_INTEGRATE = Link.ofParent(LINKS.PROJECT, 'integrate');
 
@@ -477,6 +491,7 @@ export enum QUERY {
   TASKS_FILTERS_SHOW_ALL = 'showAll',
   TRANSLATIONS_AI_PLAYGROUND = 'aiPlayground',
   TRANSLATIONS_AI_PLAYGROUND_PROMPT = 'prompt',
+  TRANSLATIONS_AI_PLAYGROUND_TYPE = 'promptType',
 }
 
 export const getProjectTranslationsUrl = (
@@ -509,7 +524,8 @@ export const getTaskUrl = (projectId: number, taskNumber: number) => {
 export const getAiPlaygroundUrl = (
   projectId: number,
   promptId?: number,
-  view?: 'TABLE'
+  view?: 'TABLE',
+  promptType?: 'REVIEW'
 ) => {
   let link = `${LINKS.PROJECT_TRANSLATIONS.build({
     [PARAMS.PROJECT_ID]: projectId,
@@ -519,6 +535,9 @@ export const getAiPlaygroundUrl = (
   }
   if (view === 'TABLE') {
     link += `&${QUERY.TRANSLATIONS_VIEW}=${view}`;
+  }
+  if (promptType !== undefined) {
+    link += `&${QUERY.TRANSLATIONS_AI_PLAYGROUND_TYPE}=${promptType}`;
   }
   return link;
 };

@@ -20,6 +20,7 @@ export const ssoOrganizationsLoginTestData = generateTestDataObject(
 );
 
 export const organizationTestData = generateTestDataObject('organizations');
+export const aiReviewTestData = generateTestDataObject('ai-review');
 
 export const communityContributionData = generateTestDataObject(
   'community-contribution'
@@ -66,6 +67,8 @@ export const publicProjectsData = {
   ...generateTestDataObject('public-projects'),
   generateFew: () => internalFetch('e2e-data/public-projects/generate-few'),
 };
+
+export const communityStatsData = generateTestDataObject('community-stats');
 
 export const projectTestData = generateTestDataObject('projects');
 
